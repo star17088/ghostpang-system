@@ -1,16 +1,16 @@
-const SUPABASE_URL = "여기에_URL";
+const SUPABASE_URL = "https://meklvygwptbzewqvhtob.supabase.co";
 const SUPABASE_KEY = "여기에_publishable_key";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const app = document.getElementById("app");
 
-// 현재 페이지 구분
+// 페이지 구분
 function getRoute() {
   return location.hash.includes("admin") ? "admin" : "customer";
 }
 
-// 초기 실행
+// 실행
 render();
 
 // =========================
@@ -24,20 +24,24 @@ function renderCustomer() {
       <input id="team" placeholder="팀명"><br><br>
       <input id="phone" placeholder="전화번호"><br><br>
 
-      <button onclick="login()">로그인</button>
+      <button onclick="login()">등록</button>
 
       <h3>실시간 대기</h3>
       <div id="list"></div>
     </div>
   `;
+
+  loadList();
 }
 
-// 로그인 + 등록
+// 등록
 async function login() {
   const team = document.getElementById("team").value;
   const phone = document.getElementById("phone").value;
 
-  await supabase.from("customers").insert([
+  if (!team) return alert("팀명 입력하세요");
+
+  await supabase.from("waiting_list").insert([
     {
       team_name: team,
       phone: phone
@@ -47,9 +51,12 @@ async function login() {
   loadList();
 }
 
-// 대기 리스트 불러오기
+// 리스트
 async function loadList() {
-  const { data } = await supabase.from("customers").select("*");
+  const { data } = await supabase
+    .from("waiting_list")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   document.getElementById("list").innerHTML =
     data.map(d => `<div>${d.team_name}</div>`).join("");
@@ -68,15 +75,19 @@ function renderAdmin() {
   `;
 }
 
+// 관리자 리스트
 async function loadAdmin() {
-  const { data } = await supabase.from("customers").select("*");
+  const { data } = await supabase
+    .from("waiting_list")
+    .select("*")
+    .order("created_at", { ascending: true });
 
   document.getElementById("adminList").innerHTML =
     data.map(d => `<div>${d.team_name} / ${d.phone}</div>`).join("");
 }
 
 // =========================
-// 라우팅 실행
+// 라우팅
 // =========================
 function render() {
   if (getRoute() === "admin") {
