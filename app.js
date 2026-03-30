@@ -21,6 +21,8 @@ const ROOM_OPTIONS = [
 const BOARDGAME_KEY = "boardgame";
 
 let state = {
+  adminHintCount: 0,
+  showAdminEntry: false,
   mode: "customer",
   pcScreenTab: "rooms",
   adminOpen: false,
@@ -432,6 +434,28 @@ function adminQueueCard(queueKey, title, list) {
   `;
 }
 
+function triggerHiddenAdmin() {
+  state.adminHintCount += 1;
+
+  if (state.adminHintCount >= 5) {
+    state.showAdminEntry = true;
+    state.adminHintCount = 0;
+    render();
+    return;
+  }
+
+  clearTimeout(window.__ghostpangAdminHintTimer);
+  window.__ghostpangAdminHintTimer = setTimeout(() => {
+    state.adminHintCount = 0;
+  }, 1800);
+}
+
+function closeHiddenAdmin() {
+  state.showAdminEntry = false;
+  state.adminPassword = "";
+  render();
+}
+
 function render() {
   if (!state.ready) {
     app.innerHTML = `
@@ -461,67 +485,101 @@ function render() {
       <div class="wrap">
         <div class="topbar">
           <div>
-            <div class="title">고스트팡 대기 시스템</div>
-            <div class="subtitle">고객용 / 관리자용 / PC용 실시간 대기 등록</div>
+            <div class="title" onclick="triggerHiddenAdmin()" style="cursor:default; user-select:none;">고스트팡 대기 시스템</div>
+            <div class="subtitle">고객용 / PC용 실시간 대기 등록</div>
           </div>
 
           <div class="mode-buttons">
             <button class="btn ${state.mode === "customer" ? "active" : "btn-dark"}" onclick="setMode('customer')">고객용 화면</button>
-            <button class="btn ${state.mode === "admin" ? "active" : "btn-dark"}" onclick="setMode('admin')">관리자용 화면</button>
-            <button class="btn ${state.mode === "pc" ? "active" : "btn-dark"}" onclick="setMode('pc')">PC용 화면</button>
+            <button class="btn ${
+          state.showAdminEntry
+            ? `
+          <div style="position:fixed; inset:0; background:rgba(0,0,0,0.55); display:grid; place-items:center; z-index:9999; padding:20px;">
+            <div class="card" style="width:100%; max-width:520px;">
+              <div class="section-title" style="margin-bottom:14px;">관리자 로그인</div>
+              <input class="input" type="password" value="${escapeHtml(state.adminPassword)}" oninput="updateAdminPassword(this.value)" placeholder="관리자 비밀번호 입력" />
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+                <button class="btn btn-orange" onclick="handleAdminLogin()">로그인</button>
+                <button class="btn btn-gray" onclick="closeHiddenAdmin()">닫기</button>
+              </div>
+              <div style="color:#8f98aa; font-size:13px; margin-top:12px;">상단 제목을 빠르게 5번 누르면 관리자 로그인 창이 열립니다.</div>
+            </div>
           </div>
-        </div>
+        `
+            : ""
+        }
 
         ${
-          state.mode === "customer"
+          state.mode === "admin"
             ? `
-          <div class="grid-2">
-            <div class="card">
-              <div class="section-title">고객 로그인 / 정보입력</div>
+          <div class="grid-gap">
+            <div class="grid-2">
+              <div class="card">
+                <div class="section-title" style="margin-bottom:14px;">고객 검색 / 포인트 지급</div>
+                <input class="input" value="${escapeHtml(state.searchKeyword)}" oninput="updateSearchKeyword(this.value)" placeholder="팀명 또는 핸드폰번호 검색" />
+
+                <div class="search-list">
+                  ${
+                    adminFilteredUsers.length === 0
+                      ? `<div class="muted">검색 결과가 없습니다.</div>`
+                      : adminFilteredUsers
+                          .map(
+                            (team) => `
+                          <div class="admin-item">
+                            <div class="flex-between">
+                              <div style="font-weight:800;">${escapeHtml(team.teamName)}</div>
+                              <div style="color:#b3bdd0;">${maskPhone(team.phone)}</div>
+                            </div>
+                            <div class="meta-row" style="color:#97a2b8;">
+                              <span>테이블 ${escapeHtml(team.tableNo || "-")}</span>
+                              <span>인원 ${team.people || "-"}명</span>
+                              <span>포인트 ${team.points || 0}개</span>
+                              <span>보드게임 ${team.boardgamePoint || 0}개</span>
+                            </div>
+                            <div class="grid-gap" style="gap:10px;">
+                              <div class="point-buttons" style="gap:8px;">
+                                ${[1, 2, 3, 4, 5]
+                                  .map(
+                                    (n) => `<button class="btn btn-soft" onclick="givePoints('${team.id}', ${n})">+${n}</button>`
+                                  )
+                                  .join("")}
+                                <button class="btn btn-green" style="padding:9px 12px;" onclick="giveBoardgamePoint('${team.id}')">보드게임 1지급</button>
+                              </div>
+                              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <button class="btn btn-direct" onclick="directEditPoints('${team.id}')">일반 포인트 직접수정</button>
+                                <button class="btn btn-direct" onclick="directEditBoardgamePoints('${team.id}')">보드게임 포인트 직접수정</button>
+                              </div>
+                              <button class="btn btn-red" style="padding:10px 12px;" onclick="deleteTeam('${team.id}')">팀 완전삭제</button>
+                            </div>
+                          </div>
+                        `
+                          )
+                          .join("")
+                  }
+                </div>
+              </div>
 
               <div class="grid-gap">
-                <div>
-                  <div class="label">팀이름</div>
-                  <input class="input" value="${escapeHtml(state.customerForm.teamName)}" oninput="updateCustomerForm('teamName', this.value)" placeholder="예: 또야팀" />
-                </div>
-
-                <div>
-                  <div class="label">핸드폰번호</div>
-                  <input class="input" value="${escapeHtml(state.customerForm.phone)}" oninput="updateCustomerForm('phone', this.value.replace(/[^0-9]/g,''))" placeholder="숫자만 입력" />
-                </div>
-
-                <button class="btn btn-orange" onclick="handleCustomerLogin()">로그인</button>
-              </div>
-
-              <div class="divider grid-gap">
-                <div class="subsection-title">2단계 정보입력</div>
-                <div>
-                  <div class="label">인원 수</div>
-                  <input class="input" value="${escapeHtml(state.customerForm.people)}" oninput="updateCustomerForm('people', this.value.replace(/[^0-9]/g,''))" placeholder="예: 4" />
-                </div>
-                <div>
-                  <div class="label">테이블 번호</div>
-                  <input class="input" value="${escapeHtml(state.customerForm.tableNo)}" oninput="updateCustomerForm('tableNo', this.value)" placeholder="예: A-3" />
-                </div>
-                <button class="btn btn-blue" onclick="handleCustomerSaveStep2()">정보 저장</button>
-              </div>
-
-              ${
-                currentUser
-                  ? `
-                  <div class="info-box">
-                    <div style="font-weight:900;font-size:18px;">${escapeHtml(currentUser.teamName)}</div>
-                    <div class="orange-text">예약 가능 포인트: ${currentUser.points || 0}개</div>
-                    <div class="orange-text">보드게임 포인트: ${currentUser.boardgamePoint || 0}개</div>
-                    <div class="orange-text">인원 ${currentUser.people || "-"}명 · 테이블 ${escapeHtml(currentUser.tableNo || "-")}</div>
+                <div class="flex-between" style="align-items:center;">
+                  <div class="section-title" style="margin-bottom:0;">관리자용 실시간 대기화면</div>
+                  <div class="inline-buttons" style="gap:10px;">
+                    <button class="btn btn-gray" onclick="setMode('customer')">고객화면으로</button>
+                    <button class="btn btn-gray" onclick="resetAll()">전체 초기화</button>
                   </div>
-                `
-                  : ""
-              }
+                </div>
 
-              ${
-                boardgameUsers.some((team) => team.id === state.currentUserId)
-                  ? `<div class="success-box">보드게임 사용자로 자동 등록되었습니다.</div>`
+                <div class="grid-gap">
+                  ${adminQueueCard("big", "큰방1", queueDetails.big)}
+                  ${adminQueueCard("small1", "작은방1", queueDetails.small1)}
+                  ${adminQueueCard("small2", "작은방2", queueDetails.small2)}
+                  ${adminQueueCard(BOARDGAME_KEY, "보드게임 사용자", queueDetails.boardgame)}
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+            : ""
+        }ass="success-box">보드게임 사용자로 자동 등록되었습니다.</div>`
                   : ""
               }
             </div>
@@ -746,6 +804,8 @@ window.removeFromQueue = removeFromQueue;
 window.enterTeam = enterTeam;
 window.deleteTeam = deleteTeam;
 window.resetAll = resetAll;
+window.triggerHiddenAdmin = triggerHiddenAdmin;
+window.closeHiddenAdmin = closeHiddenAdmin;
 
 onSnapshot(teamsRef, (snapshot) => {
   state.teams = snapshot.docs.map((item) => ({
