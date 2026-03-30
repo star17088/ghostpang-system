@@ -9,7 +9,7 @@ import {
 } from "./firebase.js";
 
 const app = document.getElementById("app");
-const ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD = "0702";
 const TEAMS_COLLECTION = "teams";
 
 const ROOM_OPTIONS = [
@@ -631,7 +631,7 @@ function render() {
                   <div class="section-title" style="margin-bottom:14px;">관리자 로그인</div>
                   <input class="input" type="password" value="${escapeHtml(state.adminPassword)}" oninput="updateAdminPassword(this.value)" placeholder="관리자 비밀번호 입력" />
                   <button class="btn btn-orange" style="margin-top:14px;width:100%;" onclick="handleAdminLogin()">로그인</button>
-                  <div style="color:#8f98aa;font-size:13px;margin-top:10px;">기본 비밀번호: 1234</div>
+                  
                 </div>
               `
                 : `
