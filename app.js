@@ -1,25 +1,43 @@
-import React, { useEffect, useMemo, useState } from "react";
+import {
+  db,
+  collection,
+  addDoc,
+  onSnapshot,
+  updateDoc,
+  doc,
+  deleteDoc
+} from "./firebase.js";
 
-const STORAGE_KEY = "ghostpang_waiting_data_v2";
+const app = document.getElementById("app");
 const ADMIN_PASSWORD = "1234";
+const TEAMS_COLLECTION = "teams";
 
 const ROOM_OPTIONS = [
-  { key: "big", label: "큰방1", size: "3~6인" },
-  { key: "small1", label: "작은방1", size: "2~4인" },
-  { key: "small2", label: "작은방2", size: "2~4인" },
+  { key: "big", label: "큰방1", size: "3~6인", line: "line-orange" },
+  { key: "small1", label: "작은방1", size: "2~4인", line: "line-blue" },
+  { key: "small2", label: "작은방2", size: "2~4인", line: "line-blue" }
 ];
 
 const BOARDGAME_KEY = "boardgame";
 
-const initialData = {
-  users: [],
-  queues: {
-    big: [],
-    small1: [],
-    small2: [],
-    boardgame: [],
+let state = {
+  mode: "customer",
+  pcScreenTab: "rooms",
+  adminOpen: false,
+  adminPassword: "",
+  customerForm: {
+    teamName: "",
+    phone: "",
+    people: "",
+    tableNo: ""
   },
+  currentUserId: localStorage.getItem("ghostpang_current_user_id") || null,
+  searchKeyword: "",
+  teams: [],
+  ready: false
 };
+
+const teamsRef = collection(db, TEAMS_COLLECTION);
 
 function nowText() {
   const d = new Date();
@@ -31,12 +49,12 @@ function nowText() {
   return `${yy}-${mm}-${dd} ${hh}:${mi}`;
 }
 
-function makeId() {
-  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+function timestamp() {
+  return Date.now();
 }
 
 function onlyNumber(value) {
-  return value.replace(/[^0-9]/g, "");
+  return String(value || "").replace(/[^0-9]/g, "");
 }
 
 function maskPhone(phone) {
@@ -47,1150 +65,715 @@ function maskPhone(phone) {
   return p;
 }
 
-function getSavedData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialData;
-    const parsed = JSON.parse(raw);
-    return {
-      users: parsed.users || [],
-      queues: {
-        big: parsed.queues?.big || [],
-        small1: parsed.queues?.small1 || [],
-        small2: parsed.queues?.small2 || [],
-        boardgame: parsed.queues?.boardgame || [],
-      },
-    };
-  } catch (e) {
-    return initialData;
-  }
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
-function App() {
-  const [data, setData] = useState(initialData);
-  const [mode, setMode] = useState("customer");
-  const [pcScreenTab, setPcScreenTab] = useState("rooms");
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [customerForm, setCustomerForm] = useState({
-    teamName: "",
-    phone: "",
-    people: "",
-    tableNo: "",
+function setCurrentUser(id) {
+  state.currentUserId = id;
+  if (id) localStorage.setItem("ghostpang_current_user_id", id);
+  else localStorage.removeItem("ghostpang_current_user_id");
+}
+
+function getTeamById(id) {
+  return state.teams.find((team) => team.id === id) || null;
+}
+
+function getCurrentUser() {
+  return getTeamById(state.currentUserId);
+}
+
+function getVisibleCustomerQueues() {
+  const byRoom = {};
+  ROOM_OPTIONS.forEach((room) => {
+    const key = `${room.key}QueueAt`;
+    byRoom[room.key] = state.teams
+      .filter((team) => !!team[key])
+      .sort((a, b) => a[key] - b[key]);
   });
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  return byRoom;
+}
 
-  useEffect(() => {
-    setData(getSavedData());
-  }, []);
+function getBoardgameUsers() {
+  return state.teams
+    .filter((team) => team.boardgamePoint >= 1 && !!team.boardgameJoinedAt)
+    .sort((a, b) => (a.boardgameJoinedAtTs || 0) - (b.boardgameJoinedAtTs || 0));
+}
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
-
-  const currentUser = useMemo(
-    () => data.users.find((u) => u.id === currentUserId) || null,
-    [data.users, currentUserId]
+function getAdminFilteredUsers() {
+  const keyword = state.searchKeyword.trim();
+  if (!keyword) return [...state.teams].sort((a, b) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
+  return state.teams.filter(
+    (team) =>
+      team.teamName.includes(keyword) ||
+      onlyNumber(team.phone).includes(onlyNumber(keyword))
   );
+}
 
-  const boardgameUsers = useMemo(() => {
-    return data.queues.boardgame
-      .map((id) => data.users.find((u) => u.id === id))
-      .filter(Boolean);
-  }, [data]);
+function getQueueDetailsForAdmin() {
+  const result = {
+    big: [],
+    small1: [],
+    small2: [],
+    boardgame: []
+  };
 
-  const visibleCustomerQueues = useMemo(() => {
-    return {
-      big: data.queues.big
-        .map((id) => data.users.find((u) => u.id === id))
-        .filter(Boolean),
-      small1: data.queues.small1
-        .map((id) => data.users.find((u) => u.id === id))
-        .filter(Boolean),
-      small2: data.queues.small2
-        .map((id) => data.users.find((u) => u.id === id))
-        .filter(Boolean),
-    };
-  }, [data]);
+  ROOM_OPTIONS.forEach((room) => {
+    const key = `${room.key}QueueAt`;
+    result[room.key] = state.teams
+      .filter((team) => !!team[key])
+      .sort((a, b) => a[key] - b[key])
+      .map((team, index) => ({ ...team, waitNo: index + 1 }));
+  });
 
-  const adminFilteredUsers = useMemo(() => {
-    const keyword = searchKeyword.trim();
-    if (!keyword) return data.users;
-    return data.users.filter(
-      (u) =>
-        u.teamName.includes(keyword) ||
-        onlyNumber(u.phone).includes(onlyNumber(keyword))
-    );
-  }, [data.users, searchKeyword]);
+  result.boardgame = getBoardgameUsers().map((team, index) => ({ ...team, waitNo: index + 1 }));
+  return result;
+}
 
-  const queueDetailsForAdmin = useMemo(() => {
-    const makeList = (queueKey) =>
-      data.queues[queueKey]
-        .map((id, index) => {
-          const user = data.users.find((u) => u.id === id);
-          if (!user) return null;
-          return {
-            ...user,
-            waitNo: index + 1,
-          };
-        })
-        .filter(Boolean);
+function isAlreadyInQueue(queueKey, team) {
+  return !!team[`${queueKey}QueueAt`];
+}
 
-    return {
-      big: makeList("big"),
-      small1: makeList("small1"),
-      small2: makeList("small2"),
-      boardgame: makeList("boardgame"),
-    };
-  }, [data]);
+async function createTeam(payload) {
+  await addDoc(teamsRef, payload);
+}
 
-  function updateCustomerForm(key, value) {
-    setCustomerForm((prev) => ({ ...prev, [key]: value }));
+async function patchTeam(teamId, patch) {
+  await updateDoc(doc(db, TEAMS_COLLECTION, teamId), patch);
+}
+
+async function removeTeam(teamId) {
+  await deleteDoc(doc(db, TEAMS_COLLECTION, teamId));
+}
+
+async function handleCustomerLogin() {
+  const teamName = state.customerForm.teamName.trim();
+  const phone = onlyNumber(state.customerForm.phone);
+
+  if (!teamName || !phone) {
+    alert("팀이름과 핸드폰번호를 입력해주세요.");
+    return;
   }
 
-  function handleCustomerLogin() {
-    const teamName = customerForm.teamName.trim();
-    const phone = onlyNumber(customerForm.phone);
+  let foundTeam = state.teams.find((team) => onlyNumber(team.phone) === phone);
 
-    if (!teamName || !phone) {
-      alert("팀이름과 핸드폰번호를 입력해주세요.");
-      return;
-    }
-
-    let foundUser = data.users.find((u) => onlyNumber(u.phone) === phone);
-
-    if (!foundUser) {
-      foundUser = {
-        id: makeId(),
-        teamName,
-        phone,
-        people: "",
-        tableNo: "",
-        points: 0,
-        boardgamePoint: 0,
-        boardgameJoinedAt: "",
-        createdAt: nowText(),
-      };
-
-      setData((prev) => ({
-        ...prev,
-        users: [...prev.users, foundUser],
-      }));
-    } else if (foundUser.teamName !== teamName) {
-      setData((prev) => ({
-        ...prev,
-        users: prev.users.map((u) =>
-          u.id === foundUser.id ? { ...u, teamName } : u
-        ),
-      }));
-      foundUser = { ...foundUser, teamName };
-    }
-
-    setCurrentUserId(foundUser.id);
-  }
-
-  function handleCustomerSaveStep2() {
-    if (!currentUser) return;
-    const people = customerForm.people.trim();
-    const tableNo = customerForm.tableNo.trim();
-
-    if (!people || !tableNo) {
-      alert("인원 수와 테이블 번호를 입력해주세요.");
-      return;
-    }
-
-    setData((prev) => ({
-      ...prev,
-      users: prev.users.map((u) =>
-        u.id === currentUser.id
-          ? {
-              ...u,
-              people,
-              tableNo,
-            }
-          : u
-      ),
-    }));
-  }
-
-  function isAlreadyInQueue(queueKey, userId) {
-    return data.queues[queueKey].includes(userId);
-  }
-
-  function handleReserve(queueKey) {
-    if (!currentUser) {
-      alert("먼저 로그인해주세요.");
-      return;
-    }
-
-    const latestUser = data.users.find((u) => u.id === currentUser.id);
-    if (!latestUser) return;
-
-    if (!latestUser.people || !latestUser.tableNo) {
-      alert("인원 수와 테이블 번호를 먼저 입력해주세요.");
-      return;
-    }
-
-    if (latestUser.points < 1) {
-      alert("예약 가능한 포인트가 없습니다.");
-      return;
-    }
-
-    if (isAlreadyInQueue(queueKey, latestUser.id)) {
-      alert("이미 해당 대기열에 등록되어 있습니다.");
-      return;
-    }
-
-    setData((prev) => ({
-      users: prev.users.map((u) =>
-        u.id === latestUser.id ? { ...u, points: u.points - 1 } : u
-      ),
-      queues: {
-        ...prev.queues,
-        [queueKey]: [...prev.queues[queueKey], latestUser.id],
-      },
-    }));
-  }
-
-  function handleAdminLogin() {
-    if (adminPassword === ADMIN_PASSWORD) {
-      setAdminOpen(true);
-    } else {
-      alert("관리자 비밀번호가 올바르지 않습니다.");
-    }
-  }
-
-  function givePoints(userId, amount) {
-    setData((prev) => ({
-      ...prev,
-      users: prev.users.map((u) =>
-        u.id === userId ? { ...u, points: (u.points || 0) + amount } : u
-      ),
-    }));
-  }
-
-  function giveBoardgamePoint(userId) {
-    setData((prev) => {
-      const target = prev.users.find((u) => u.id === userId);
-      if (!target) return prev;
-
-      const shouldJoinQueue = !prev.queues.boardgame.includes(userId);
-
-      return {
-        users: prev.users.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                boardgamePoint: 1,
-                boardgameJoinedAt:
-                  u.boardgameJoinedAt ||
-                  (shouldJoinQueue ? nowText() : u.boardgameJoinedAt),
-              }
-            : u
-        ),
-        queues: {
-          ...prev.queues,
-          boardgame: shouldJoinQueue
-            ? [...prev.queues.boardgame, userId]
-            : prev.queues.boardgame,
-        },
-      };
-    });
-  }
-
-  function removeFromQueue(queueKey, userId) {
-    setData((prev) => ({
-      ...prev,
-      queues: {
-        ...prev.queues,
-        [queueKey]: prev.queues[queueKey].filter((id) => id !== userId),
-      },
-    }));
-  }
-
-  function enterTeam(queueKey, userId) {
-    setData((prev) => ({
-      ...prev,
-      queues: {
-        ...prev.queues,
-        [queueKey]: prev.queues[queueKey].filter((id) => id !== userId),
-      },
-    }));
-  }
-
-  function resetAll() {
-    const ok = window.confirm(
-      "전체 데이터를 초기화할까요?\n등록 고객, 포인트, 대기열이 모두 삭제됩니다."
-    );
-    if (!ok) return;
-    setData(initialData);
-    setCurrentUserId(null);
-    setCustomerForm({
-      teamName: "",
-      phone: "",
+  if (!foundTeam) {
+    await createTeam({
+      teamName,
+      phone,
       people: "",
       tableNo: "",
+      points: 0,
+      boardgamePoint: 0,
+      boardgameJoinedAt: "",
+      boardgameJoinedAtTs: null,
+      bigQueueAt: null,
+      small1QueueAt: null,
+      small2QueueAt: null,
+      createdAt: nowText(),
+      createdAtTs: timestamp()
     });
+    return;
   }
 
-  const cardStyle = {
-    background: "linear-gradient(180deg, #0f141f 0%, #0a0d14 100%)",
-    border: "1px solid rgba(255,255,255,0.06)",
-    borderRadius: 18,
-    padding: 20,
-    boxShadow: "0 8px 25px rgba(0,0,0,0.35)",
-    position: "relative",
-    overflow: "hidden",
-  };
+  if (foundTeam.teamName !== teamName) {
+    await patchTeam(foundTeam.id, { teamName });
+  }
 
-  const buttonStyle = {
-    border: "none",
-    borderRadius: 14,
-    padding: "12px 16px",
-    fontSize: 15,
-    fontWeight: 700,
-    cursor: "pointer",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: 14,
-    border: "1px solid #2f3747",
-    background: "#131824",
-    color: "white",
-    fontSize: 15,
-    outline: "none",
-  };
-
-  const renderCustomerQueueCard = (room) => {
-    const list = visibleCustomerQueues[room.key];
-
-    return (
-      <div key={room.key} style={{ ...cardStyle }}>
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            background:
-              room.key === "big"
-                ? "linear-gradient(90deg,#ff8a00,#ffb347)"
-                : "linear-gradient(90deg,#4c7dff,#6fa8ff)",
-          }}
-        />
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>{room.label}</div>
-            <div style={{ fontSize: 13, color: "#9da7bb", marginTop: 4 }}>
-              {room.size}
-            </div>
-          </div>
-          <button
-            style={{ ...buttonStyle, background: "#ff8a00", color: "#111" }}
-            onClick={() => handleReserve(room.key)}
-          >
-            예약 등록
-          </button>
-        </div>
-
-        {list.length === 0 ? (
-          <div style={{ color: "#8e97a8", fontSize: 14 }}>현재 대기 없음</div>
-        ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            {list.map((user, index) => (
-              <div
-                key={user.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  background:
-                    index === 0
-                      ? "linear-gradient(90deg, rgba(255,138,0,0.20), rgba(255,138,0,0.05))"
-                      : "rgba(255,255,255,0.04)",
-                  border:
-                    index === 0
-                      ? "1px solid rgba(255,138,0,0.3)"
-                      : "1px solid rgba(255,255,255,0.04)",
-                }}
-              >
-                <div style={{ fontWeight: 700 }}>{index + 1}순위</div>
-                <div style={{ color: "#ffffff" }}>{user.teamName}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderAdminQueueCard = (queueKey, title) => {
-    const list = queueDetailsForAdmin[queueKey];
-    const isBoardGame = queueKey === BOARDGAME_KEY;
-
-    return (
-      <div style={{ ...cardStyle }} key={queueKey}>
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            background:
-              queueKey === "big"
-                ? "linear-gradient(90deg,#ff8a00,#ffb347)"
-                : queueKey === "boardgame"
-                ? "linear-gradient(90deg,#3ddc97,#7ef0ba)"
-                : "linear-gradient(90deg,#4c7dff,#6fa8ff)",
-          }}
-        />
-
-        <div style={{ fontSize: 19, fontWeight: 800, marginBottom: 14 }}>{title}</div>
-        {list.length === 0 ? (
-          <div style={{ color: "#8e97a8", fontSize: 14 }}>현재 대기 없음</div>
-        ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            {list.map((user) => (
-              <div
-                key={user.id}
-                style={{
-                  borderRadius: 14,
-                  background: "rgba(255,255,255,0.04)",
-                  padding: 14,
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div style={{ fontWeight: 800 }}>
-                    {user.waitNo}순위 · {user.teamName}
-                  </div>
-                  <div style={{ color: "#c7cedb", fontSize: 14 }}>
-                    {maskPhone(user.phone)}
-                  </div>
-                </div>
-                {!isBoardGame && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 14,
-                      flexWrap: "wrap",
-                      color: "#a8b2c5",
-                      fontSize: 14,
-                    }}
-                  >
-                    <span>테이블 {user.tableNo || "-"}</span>
-                    <span>인원 {user.people || "-"}명</span>
-                  </div>
-                )}
-                {isBoardGame && (
-                  <div style={{ color: "#a8b2c5", fontSize: 14 }}>
-                    로그인 시간 {user.boardgameJoinedAt || "-"}
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button
-                    style={{
-                      ...buttonStyle,
-                      background: "#3ddc97",
-                      color: "#111",
-                      padding: "10px 14px",
-                    }}
-                    onClick={() => enterTeam(queueKey, user.id)}
-                  >
-                    입장
-                  </button>
-                  <button
-                    style={{
-                      ...buttonStyle,
-                      background: "#ff5c5c",
-                      color: "white",
-                      padding: "10px 14px",
-                    }}
-                    onClick={() => removeFromQueue(queueKey, user.id)}
-                  >
-                    삭제
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(180deg, #080b12 0%, #101522 100%)",
-        color: "white",
-        padding: 20,
-        fontFamily: "Pretendard, Arial, sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 1320, margin: "0 auto" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-            marginBottom: 24,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: -0.5 }}>
-              고스트팡 대기 시스템
-            </div>
-            <div style={{ color: "#97a2b8", marginTop: 6 }}>
-              고객용 / 관리자용 / PC용 실시간 대기 등록
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              style={{
-                ...buttonStyle,
-                background: mode === "customer" ? "#ff8a00" : "#20283a",
-                color: mode === "customer" ? "#111" : "white",
-              }}
-              onClick={() => setMode("customer")}
-            >
-              고객용 화면
-            </button>
-            <button
-              style={{
-                ...buttonStyle,
-                background: mode === "admin" ? "#ff8a00" : "#20283a",
-                color: mode === "admin" ? "#111" : "white",
-              }}
-              onClick={() => setMode("admin")}
-            >
-              관리자용 화면
-            </button>
-            <button
-              style={{
-                ...buttonStyle,
-                background: mode === "pc" ? "#ff8a00" : "#20283a",
-                color: mode === "pc" ? "#111" : "white",
-              }}
-              onClick={() => setMode("pc")}
-            >
-              PC용 화면
-            </button>
-          </div>
-        </div>
-
-        {mode === "customer" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1.2fr", gap: 20 }}>
-            <div style={{ ...cardStyle, alignSelf: "start" }}>
-              <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 18 }}>
-                고객 로그인 / 정보입력
-              </div>
-
-              <div style={{ display: "grid", gap: 14 }}>
-                <div>
-                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
-                    팀이름
-                  </div>
-                  <input
-                    style={inputStyle}
-                    value={customerForm.teamName}
-                    onChange={(e) => updateCustomerForm("teamName", e.target.value)}
-                    placeholder="예: 또야팀"
-                  />
-                </div>
-
-                <div>
-                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
-                    핸드폰번호
-                  </div>
-                  <input
-                    style={inputStyle}
-                    value={customerForm.phone}
-                    onChange={(e) => updateCustomerForm("phone", onlyNumber(e.target.value))}
-                    placeholder="숫자만 입력"
-                  />
-                </div>
-
-                <button
-                  style={{ ...buttonStyle, background: "#ff8a00", color: "#111", marginTop: 4 }}
-                  onClick={handleCustomerLogin}
-                >
-                  로그인
-                </button>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 20,
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                  paddingTop: 20,
-                  display: "grid",
-                  gap: 14,
-                }}
-              >
-                <div style={{ fontSize: 18, fontWeight: 800 }}>2단계 정보입력</div>
-                <div>
-                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
-                    인원 수
-                  </div>
-                  <input
-                    style={inputStyle}
-                    value={customerForm.people}
-                    onChange={(e) => updateCustomerForm("people", onlyNumber(e.target.value))}
-                    placeholder="예: 4"
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
-                    테이블 번호
-                  </div>
-                  <input
-                    style={inputStyle}
-                    value={customerForm.tableNo}
-                    onChange={(e) => updateCustomerForm("tableNo", e.target.value)}
-                    placeholder="예: A-3"
-                  />
-                </div>
-                <button
-                  style={{ ...buttonStyle, background: "#4c7dff", color: "white" }}
-                  onClick={handleCustomerSaveStep2}
-                >
-                  정보 저장
-                </button>
-              </div>
-
-              {currentUser && (
-                <div
-                  style={{
-                    marginTop: 20,
-                    background: "rgba(255,138,0,0.12)",
-                    border: "1px solid rgba(255,138,0,0.28)",
-                    borderRadius: 16,
-                    padding: 16,
-                    display: "grid",
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ fontWeight: 900, fontSize: 18 }}>{currentUser.teamName}</div>
-                  <div style={{ color: "#ffd7a6" }}>
-                    예약 가능 포인트: {currentUser.points || 0}개
-                  </div>
-                  <div style={{ color: "#ffd7a6" }}>
-                    보드게임 포인트: {currentUser.boardgamePoint || 0}개
-                  </div>
-                  {(currentUser.people || currentUser.tableNo) && (
-                    <div style={{ color: "#ffd7a6" }}>
-                      인원 {currentUser.people || "-"}명 · 테이블 {currentUser.tableNo || "-"}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {boardgameUsers.some((u) => u.id === currentUserId) && (
-                <div
-                  style={{
-                    marginTop: 16,
-                    background: "rgba(61,220,151,0.12)",
-                    border: "1px solid rgba(61,220,151,0.3)",
-                    borderRadius: 16,
-                    padding: 16,
-                    color: "#bdf6da",
-                    fontWeight: 700,
-                  }}
-                >
-                  보드게임 사용자로 자동 등록되었습니다.
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gap: 18 }}>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>실시간 대기화면</div>
-              <div style={{ display: "grid", gap: 16 }}>
-                {ROOM_OPTIONS.map(renderCustomerQueueCard)}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {mode === "pc" && (
-          <div style={{ display: "grid", gap: 22 }}>
-            <div
-              style={{
-                ...cardStyle,
-                padding: 24,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 900 }}>고스트팡 실시간 대기 현황</div>
-                <div style={{ color: "#a8b2c5", marginTop: 6, fontSize: 15 }}>
-                  PC 또는 TV 전체화면용 안내 화면
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  style={{
-                    ...buttonStyle,
-                    background: pcScreenTab === "rooms" ? "#ff8a00" : "#20283a",
-                    color: pcScreenTab === "rooms" ? "#111" : "white",
-                  }}
-                  onClick={() => setPcScreenTab("rooms")}
-                >
-                  게임방 대기
-                </button>
-                <button
-                  style={{
-                    ...buttonStyle,
-                    background: pcScreenTab === "boardgame" ? "#ff8a00" : "#20283a",
-                    color: pcScreenTab === "boardgame" ? "#111" : "white",
-                  }}
-                  onClick={() => setPcScreenTab("boardgame")}
-                >
-                  보드게임 사용자
-                </button>
-              </div>
-            </div>
-
-            {pcScreenTab === "rooms" && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
-                {ROOM_OPTIONS.map((room) => {
-                  const list = visibleCustomerQueues[room.key];
-                  const topBarColor =
-                    room.key === "big"
-                      ? "linear-gradient(90deg,#ff8a00,#ffb347)"
-                      : "linear-gradient(90deg,#4c7dff,#6fa8ff)";
-
-                  return (
-                    <div
-                      key={room.key}
-                      style={{
-                        ...cardStyle,
-                        minHeight: 520,
-                        padding: 24,
-                        display: "grid",
-                        alignContent: "start",
-                        gap: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 4,
-                          background: topBarColor,
-                        }}
-                      />
-
-                      <div style={{ textAlign: "center", marginTop: 4 }}>
-                        <div style={{ fontSize: 30, fontWeight: 900 }}>{room.label} 대기</div>
-                        <div style={{ fontSize: 16, color: "#97a2b8", marginTop: 6 }}>
-                          {room.size}
-                        </div>
-                      </div>
-
-                      {list.length === 0 ? (
-                        <div
-                          style={{
-                            height: "100%",
-                            display: "grid",
-                            placeItems: "center",
-                            color: "#8e97a8",
-                            fontSize: 24,
-                            fontWeight: 700,
-                          }}
-                        >
-                          대기 없음
-                        </div>
-                      ) : (
-                        <div style={{ display: "grid", gap: 14 }}>
-                          {list.map((user, index) => (
-                            <div
-                              key={user.id}
-                              style={{
-                                borderRadius: 18,
-                                background:
-                                  index === 0
-                                    ? "linear-gradient(90deg, rgba(255,138,0,0.25), rgba(255,138,0,0.05))"
-                                    : "rgba(255,255,255,0.05)",
-                                border:
-                                  index === 0
-                                    ? "1px solid rgba(255,138,0,0.4)"
-                                    : "1px solid rgba(255,255,255,0.05)",
-                                padding: "18px 20px",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: 16,
-                              }}
-                            >
-                              <div style={{ fontSize: 28, fontWeight: 900 }}>
-                                {index + 1} 순위
-                              </div>
-                              <div style={{ fontSize: 28, fontWeight: 800 }}>
-                                {user.teamName}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {pcScreenTab === "boardgame" && (
-              <div style={{ ...cardStyle, padding: 28 }}>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 4,
-                    background: "linear-gradient(90deg,#3ddc97,#7ef0ba)",
-                  }}
-                />
-
-                <div style={{ textAlign: "center", marginBottom: 24 }}>
-                  <div style={{ fontSize: 32, fontWeight: 900 }}>보드게임 사용자</div>
-                  <div style={{ color: "#9ca8bc", marginTop: 6, fontSize: 16 }}>
-                    고객용 화면에는 팀이름과 로그인 시간만 표시됩니다.
-                  </div>
-                </div>
-
-                {boardgameUsers.length === 0 ? (
-                  <div
-                    style={{
-                      minHeight: 420,
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#8e97a8",
-                      fontSize: 28,
-                      fontWeight: 700,
-                    }}
-                  >
-                    현재 보드게임 사용자 없음
-                  </div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-                    {boardgameUsers.map((user, index) => (
-                      <div
-                        key={user.id}
-                        style={{
-                          borderRadius: 18,
-                          background: "rgba(255,255,255,0.05)",
-                          border:
-                            index === 0
-                              ? "1px solid rgba(61,220,151,0.35)"
-                              : "1px solid rgba(255,255,255,0.04)",
-                          padding: 20,
-                          display: "grid",
-                          gap: 8,
-                        }}
-                      >
-                        <div style={{ fontSize: 24, fontWeight: 900 }}>{index + 1} 순서</div>
-                        <div style={{ fontSize: 26, fontWeight: 800 }}>{user.teamName}</div>
-                        <div style={{ color: "#a7b1c4", fontSize: 16 }}>
-                          로그인 시간 {user.boardgameJoinedAt || "-"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {mode === "admin" && (
-          <div style={{ display: "grid", gap: 20 }}>
-            {!adminOpen ? (
-              <div style={{ ...cardStyle, maxWidth: 480 }}>
-                <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 14 }}>
-                  관리자 로그인
-                </div>
-                <input
-                  style={inputStyle}
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="관리자 비밀번호 입력"
-                />
-                <button
-                  style={{
-                    ...buttonStyle,
-                    background: "#ff8a00",
-                    color: "#111",
-                    marginTop: 14,
-                    width: "100%",
-                  }}
-                  onClick={handleAdminLogin}
-                >
-                  로그인
-                </button>
-                <div style={{ color: "#8f98aa", fontSize: 13, marginTop: 10 }}>
-                  기본 비밀번호: 1234 (원하시면 나중에 변경 가능)
-                </div>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1.2fr", gap: 20 }}>
-                  <div style={{ ...cardStyle, alignSelf: "start" }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 14 }}>
-                      고객 검색 / 포인트 지급
-                    </div>
-                    <input
-                      style={inputStyle}
-                      value={searchKeyword}
-                      onChange={(e) => setSearchKeyword(e.target.value)}
-                      placeholder="팀명 또는 핸드폰번호 검색"
-                    />
-
-                    <div
-                      style={{
-                        marginTop: 16,
-                        display: "grid",
-                        gap: 10,
-                        maxHeight: 640,
-                        overflowY: "auto",
-                      }}
-                    >
-                      {adminFilteredUsers.length === 0 ? (
-                        <div style={{ color: "#8e97a8" }}>검색 결과가 없습니다.</div>
-                      ) : (
-                        adminFilteredUsers.map((user) => (
-                          <div
-                            key={user.id}
-                            style={{
-                              background: "rgba(255,255,255,0.04)",
-                              borderRadius: 14,
-                              padding: 14,
-                              display: "grid",
-                              gap: 10,
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 8,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <div style={{ fontWeight: 800 }}>{user.teamName}</div>
-                              <div style={{ color: "#b3bdd0" }}>{maskPhone(user.phone)}</div>
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: 12,
-                                flexWrap: "wrap",
-                                color: "#97a2b8",
-                                fontSize: 14,
-                              }}
-                            >
-                              <span>테이블 {user.tableNo || "-"}</span>
-                              <span>인원 {user.people || "-"}명</span>
-                              <span>포인트 {user.points || 0}개</span>
-                              <span>보드게임 {user.boardgamePoint || 0}개</span>
-                            </div>
-                            <div style={{ display: "grid", gap: 10 }}>
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                {[1, 2, 3, 4, 5].map((n) => (
-                                  <button
-                                    key={n}
-                                    style={{
-                                      ...buttonStyle,
-                                      background: "#24324d",
-                                      color: "white",
-                                      padding: "9px 12px",
-                                    }}
-                                    onClick={() => givePoints(user.id, n)}
-                                  >
-                                    +{n}
-                                  </button>
-                                ))}
-                                <button
-                                  style={{
-                                    ...buttonStyle,
-                                    background: "#3ddc97",
-                                    color: "#111",
-                                    padding: "9px 12px",
-                                  }}
-                                  onClick={() => giveBoardgamePoint(user.id)}
-                                >
-                                  보드게임 1지급
-                                </button>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "grid",
-                                  gridTemplateColumns: "1fr 1fr",
-                                  gap: 8,
-                                  alignItems: "center",
-                                }}
-                              >
-                                <button
-                                  style={{
-                                    ...buttonStyle,
-                                    background: "#5b6380",
-                                    color: "white",
-                                    padding: "10px 12px",
-                                  }}
-                                  onClick={() => {
-                                    const value = window.prompt(
-                                      "변경할 일반 포인트 값을 입력해주세요.",
-                                      String(user.points || 0)
-                                    );
-                                    if (value === null) return;
-                                    const num = Number(value);
-                                    if (Number.isNaN(num) || num < 0) {
-                                      alert("0 이상의 숫자만 입력해주세요.");
-                                      return;
-                                    }
-                                    setData((prev) => ({
-                                      ...prev,
-                                      users: prev.users.map((u) =>
-                                        u.id === user.id ? { ...u, points: Math.floor(num) } : u
-                                      ),
-                                    }));
-                                  }}
-                                >
-                                  일반 포인트 직접수정
-                                </button>
-
-                                <button
-                                  style={{
-                                    ...buttonStyle,
-                                    background: "#5b6380",
-                                    color: "white",
-                                    padding: "10px 12px",
-                                  }}
-                                  onClick={() => {
-                                    const value = window.prompt(
-                                      "변경할 보드게임 포인트 값을 입력해주세요. (0 또는 1 권장)",
-                                      String(user.boardgamePoint || 0)
-                                    );
-                                    if (value === null) return;
-                                    const num = Number(value);
-                                    if (Number.isNaN(num) || num < 0) {
-                                      alert("0 이상의 숫자만 입력해주세요.");
-                                      return;
-                                    }
-
-                                    const nextValue = Math.floor(num);
-                                    setData((prev) => {
-                                      const alreadyInQueue = prev.queues.boardgame.includes(user.id);
-                                      const shouldAddQueue = nextValue >= 1 && !alreadyInQueue;
-                                      const shouldRemoveQueue = nextValue < 1 && alreadyInQueue;
-
-                                      return {
-                                        users: prev.users.map((u) =>
-                                          u.id === user.id
-                                            ? {
-                                                ...u,
-                                                boardgamePoint: nextValue,
-                                                boardgameJoinedAt:
-                                                  nextValue >= 1
-                                                    ? u.boardgameJoinedAt || nowText()
-                                                    : "",
-                                              }
-                                            : u
-                                        ),
-                                        queues: {
-                                          ...prev.queues,
-                                          boardgame: shouldAddQueue
-                                            ? [...prev.queues.boardgame, user.id]
-                                            : shouldRemoveQueue
-                                            ? prev.queues.boardgame.filter((id) => id !== user.id)
-                                            : prev.queues.boardgame,
-                                        },
-                                      };
-                                    });
-                                  }}
-                                >
-                                  보드게임 포인트 직접수정
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gap: 16 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: 10,
-                      }}
-                    >
-                      <div style={{ fontSize: 22, fontWeight: 900 }}>
-                        관리자용 실시간 대기화면
-                      </div>
-                      <button
-                        style={{ ...buttonStyle, background: "#5d667a", color: "white" }}
-                        onClick={resetAll}
-                      >
-                        전체 초기화
-                      </button>
-                    </div>
-
-                    <div style={{ display: "grid", gap: 16 }}>
-                      {renderAdminQueueCard("big", "큰방1")}
-                      {renderAdminQueueCard("small1", "작은방1")}
-                      {renderAdminQueueCard("small2", "작은방2")}
-                      {renderAdminQueueCard("boardgame", "보드게임 사용자")}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  setCurrentUser(foundTeam.id);
+  render();
 }
 
-export default App;
+async function handleCustomerSaveStep2() {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert("먼저 로그인해주세요.");
+    return;
+  }
+
+  const people = state.customerForm.people.trim();
+  const tableNo = state.customerForm.tableNo.trim();
+
+  if (!people || !tableNo) {
+    alert("인원 수와 테이블 번호를 입력해주세요.");
+    return;
+  }
+
+  await patchTeam(currentUser.id, { people, tableNo });
+}
+
+async function handleReserve(queueKey) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert("먼저 로그인해주세요.");
+    return;
+  }
+
+  if (!currentUser.people || !currentUser.tableNo) {
+    alert("인원 수와 테이블 번호를 먼저 입력해주세요.");
+    return;
+  }
+
+  if ((currentUser.points || 0) < 1) {
+    alert("예약 가능한 포인트가 없습니다.");
+    return;
+  }
+
+  if (isAlreadyInQueue(queueKey, currentUser)) {
+    alert("이미 해당 대기열에 등록되어 있습니다.");
+    return;
+  }
+
+  await patchTeam(currentUser.id, {
+    points: (currentUser.points || 0) - 1,
+    [`${queueKey}QueueAt`]: timestamp()
+  });
+}
+
+function handleAdminLogin() {
+  if (state.adminPassword === ADMIN_PASSWORD) {
+    state.adminOpen = true;
+    render();
+  } else {
+    alert("관리자 비밀번호가 올바르지 않습니다.");
+  }
+}
+
+async function givePoints(teamId, amount) {
+  const team = getTeamById(teamId);
+  if (!team) return;
+  await patchTeam(teamId, { points: (team.points || 0) + amount });
+}
+
+async function giveBoardgamePoint(teamId) {
+  const team = getTeamById(teamId);
+  if (!team) return;
+
+  const patch = {
+    boardgamePoint: 1
+  };
+
+  if (!team.boardgameJoinedAt) {
+    patch.boardgameJoinedAt = nowText();
+    patch.boardgameJoinedAtTs = timestamp();
+  }
+
+  await patchTeam(teamId, patch);
+}
+
+async function directEditPoints(teamId) {
+  const team = getTeamById(teamId);
+  if (!team) return;
+
+  const value = window.prompt("변경할 일반 포인트 값을 입력해주세요.", String(team.points || 0));
+  if (value === null) return;
+  const num = Number(value);
+  if (Number.isNaN(num) || num < 0) {
+    alert("0 이상의 숫자만 입력해주세요.");
+    return;
+  }
+
+  await patchTeam(teamId, { points: Math.floor(num) });
+}
+
+async function directEditBoardgamePoints(teamId) {
+  const team = getTeamById(teamId);
+  if (!team) return;
+
+  const value = window.prompt(
+    "변경할 보드게임 포인트 값을 입력해주세요. (0 또는 1 권장)",
+    String(team.boardgamePoint || 0)
+  );
+  if (value === null) return;
+  const num = Number(value);
+  if (Number.isNaN(num) || num < 0) {
+    alert("0 이상의 숫자만 입력해주세요.");
+    return;
+  }
+
+  const nextValue = Math.floor(num);
+  const patch = {
+    boardgamePoint: nextValue
+  };
+
+  if (nextValue >= 1) {
+    patch.boardgameJoinedAt = team.boardgameJoinedAt || nowText();
+    patch.boardgameJoinedAtTs = team.boardgameJoinedAtTs || timestamp();
+  } else {
+    patch.boardgameJoinedAt = "";
+    patch.boardgameJoinedAtTs = null;
+  }
+
+  await patchTeam(teamId, patch);
+}
+
+async function removeFromQueue(queueKey, teamId) {
+  if (queueKey === BOARDGAME_KEY) {
+    await patchTeam(teamId, {
+      boardgamePoint: 0,
+      boardgameJoinedAt: "",
+      boardgameJoinedAtTs: null
+    });
+    return;
+  }
+
+  await patchTeam(teamId, {
+    [`${queueKey}QueueAt`]: null
+  });
+}
+
+async function enterTeam(queueKey, teamId) {
+  if (queueKey === BOARDGAME_KEY) {
+    await patchTeam(teamId, {
+      boardgamePoint: 0,
+      boardgameJoinedAt: "",
+      boardgameJoinedAtTs: null
+    });
+    return;
+  }
+
+  await patchTeam(teamId, {
+    [`${queueKey}QueueAt`]: null
+  });
+}
+
+async function deleteTeam(teamId) {
+  const ok = window.confirm("이 팀을 완전히 삭제할까요?");
+  if (!ok) return;
+  if (state.currentUserId === teamId) setCurrentUser(null);
+  await removeTeam(teamId);
+}
+
+function resetAll() {
+  const ok = window.confirm("전체 데이터를 초기화할까요?\n등록 고객, 포인트, 대기열이 모두 삭제됩니다.");
+  if (!ok) return;
+
+  Promise.all(state.teams.map((team) => removeTeam(team.id))).catch(() => {
+    alert("초기화 중 오류가 발생했습니다.");
+  });
+}
+
+function customerQueueCard(room, list) {
+  return `
+    <div class="card">
+      <div class="card-topline ${room.line}"></div>
+      <div class="flex-between" style="align-items:center; margin-bottom:12px;">
+        <div>
+          <div style="font-size:18px;font-weight:800;">${room.label}</div>
+          <div style="font-size:13px;color:#9da7bb;margin-top:4px;">${room.size}</div>
+        </div>
+        <button class="btn btn-orange" onclick="handleReserve('${room.key}')">예약 등록</button>
+      </div>
+      ${
+        list.length === 0
+          ? `<div class="muted" style="font-size:14px;">현재 대기 없음</div>`
+          : `<div class="grid-gap">
+              ${list
+                .map(
+                  (team, index) => `
+                  <div class="queue-row ${index === 0 ? "first" : ""}">
+                    <div style="font-weight:700;">${index + 1}순위</div>
+                    <div>${escapeHtml(team.teamName)}</div>
+                  </div>
+                `
+                )
+                .join("")}
+            </div>`
+      }
+    </div>
+  `;
+}
+
+function adminQueueCard(queueKey, title, list) {
+  const lineClass =
+    queueKey === "big" ? "line-orange" : queueKey === BOARDGAME_KEY ? "line-green" : "line-blue";
+  const isBoardGame = queueKey === BOARDGAME_KEY;
+
+  return `
+    <div class="card">
+      <div class="card-topline ${lineClass}"></div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:14px;">${title}</div>
+      ${
+        list.length === 0
+          ? `<div class="muted" style="font-size:14px;">현재 대기 없음</div>`
+          : `<div class="grid-gap">
+              ${list
+                .map(
+                  (team) => `
+                <div class="admin-queue-item">
+                  <div class="flex-between">
+                    <div style="font-weight:800;">${team.waitNo}순위 · ${escapeHtml(team.teamName)}</div>
+                    <div style="color:#c7cedb;font-size:14px;">${maskPhone(team.phone)}</div>
+                  </div>
+                  ${
+                    !isBoardGame
+                      ? `<div class="meta-row">
+                          <span>테이블 ${escapeHtml(team.tableNo || "-")}</span>
+                          <span>인원 ${team.people || "-"}명</span>
+                        </div>`
+                      : `<div style="color:#a8b2c5;font-size:14px;">로그인 시간 ${team.boardgameJoinedAt || "-"}</div>`
+                  }
+                  <div class="inline-buttons" style="gap:8px;">
+                    <button class="btn btn-green" style="padding:10px 14px;" onclick="enterTeam('${queueKey}','${team.id}')">입장</button>
+                    <button class="btn btn-red" style="padding:10px 14px;" onclick="removeFromQueue('${queueKey}','${team.id}')">삭제</button>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>`
+      }
+    </div>
+  `;
+}
+
+function render() {
+  if (!state.ready) {
+    app.innerHTML = `
+      <div class="page">
+        <div class="wrap">
+          <div class="card" style="text-align:center; padding:40px;">
+            <div class="section-title" style="margin-bottom:0;">불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUser = getCurrentUser();
+  const boardgameUsers = getBoardgameUsers();
+  const visibleQueues = getVisibleCustomerQueues();
+  const adminFilteredUsers = getAdminFilteredUsers();
+  const queueDetails = getQueueDetailsForAdmin();
+
+  if (state.currentUserId && !currentUser) {
+    setCurrentUser(null);
+  }
+
+  app.innerHTML = `
+    <div class="page">
+      <div class="wrap">
+        <div class="topbar">
+          <div>
+            <div class="title">고스트팡 대기 시스템</div>
+            <div class="subtitle">고객용 / 관리자용 / PC용 실시간 대기 등록</div>
+          </div>
+
+          <div class="mode-buttons">
+            <button class="btn ${state.mode === "customer" ? "active" : "btn-dark"}" onclick="setMode('customer')">고객용 화면</button>
+            <button class="btn ${state.mode === "admin" ? "active" : "btn-dark"}" onclick="setMode('admin')">관리자용 화면</button>
+            <button class="btn ${state.mode === "pc" ? "active" : "btn-dark"}" onclick="setMode('pc')">PC용 화면</button>
+          </div>
+        </div>
+
+        ${
+          state.mode === "customer"
+            ? `
+          <div class="grid-2">
+            <div class="card">
+              <div class="section-title">고객 로그인 / 정보입력</div>
+
+              <div class="grid-gap">
+                <div>
+                  <div class="label">팀이름</div>
+                  <input class="input" value="${escapeHtml(state.customerForm.teamName)}" oninput="updateCustomerForm('teamName', this.value)" placeholder="예: 또야팀" />
+                </div>
+
+                <div>
+                  <div class="label">핸드폰번호</div>
+                  <input class="input" value="${escapeHtml(state.customerForm.phone)}" oninput="updateCustomerForm('phone', this.value.replace(/[^0-9]/g,''))" placeholder="숫자만 입력" />
+                </div>
+
+                <button class="btn btn-orange" onclick="handleCustomerLogin()">로그인</button>
+              </div>
+
+              <div class="divider grid-gap">
+                <div class="subsection-title">2단계 정보입력</div>
+                <div>
+                  <div class="label">인원 수</div>
+                  <input class="input" value="${escapeHtml(state.customerForm.people)}" oninput="updateCustomerForm('people', this.value.replace(/[^0-9]/g,''))" placeholder="예: 4" />
+                </div>
+                <div>
+                  <div class="label">테이블 번호</div>
+                  <input class="input" value="${escapeHtml(state.customerForm.tableNo)}" oninput="updateCustomerForm('tableNo', this.value)" placeholder="예: A-3" />
+                </div>
+                <button class="btn btn-blue" onclick="handleCustomerSaveStep2()">정보 저장</button>
+              </div>
+
+              ${
+                currentUser
+                  ? `
+                  <div class="info-box">
+                    <div style="font-weight:900;font-size:18px;">${escapeHtml(currentUser.teamName)}</div>
+                    <div class="orange-text">예약 가능 포인트: ${currentUser.points || 0}개</div>
+                    <div class="orange-text">보드게임 포인트: ${currentUser.boardgamePoint || 0}개</div>
+                    <div class="orange-text">인원 ${currentUser.people || "-"}명 · 테이블 ${escapeHtml(currentUser.tableNo || "-")}</div>
+                  </div>
+                `
+                  : ""
+              }
+
+              ${
+                boardgameUsers.some((team) => team.id === state.currentUserId)
+                  ? `<div class="success-box">보드게임 사용자로 자동 등록되었습니다.</div>`
+                  : ""
+              }
+            </div>
+
+            <div class="grid-gap">
+              <div class="section-title" style="margin-bottom:0;">실시간 대기화면</div>
+              <div class="grid-gap">
+                ${ROOM_OPTIONS.map((room) => customerQueueCard(room, visibleQueues[room.key])).join("")}
+              </div>
+            </div>
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          state.mode === "pc"
+            ? `
+          <div class="grid-gap">
+            <div class="card" style="padding:24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:28px;font-weight:900;">고스트팡 실시간 대기 현황</div>
+                <div style="color:#a8b2c5;margin-top:6px;font-size:15px;">PC 또는 TV 전체화면용 안내 화면</div>
+              </div>
+
+              <div class="mode-buttons">
+                <button class="btn ${state.pcScreenTab === "rooms" ? "active" : "btn-dark"}" onclick="setPcTab('rooms')">게임방 대기</button>
+                <button class="btn ${state.pcScreenTab === "boardgame" ? "active" : "btn-dark"}" onclick="setPcTab('boardgame')">보드게임 사용자</button>
+              </div>
+            </div>
+
+            ${
+              state.pcScreenTab === "rooms"
+                ? `
+                <div class="grid-pc">
+                  ${ROOM_OPTIONS.map((room) => {
+                    const list = visibleQueues[room.key];
+                    return `
+                      <div class="card pc-card">
+                        <div class="card-topline ${room.line}"></div>
+                        <div class="pc-header">
+                          <div class="pc-room-title">${room.label} 대기</div>
+                          <div class="pc-room-sub">${room.size}</div>
+                        </div>
+                        ${
+                          list.length === 0
+                            ? `<div class="pc-empty">대기 없음</div>`
+                            : `<div class="grid-gap">
+                                ${list
+                                  .map(
+                                    (team, index) => `
+                                    <div class="pc-wait-row ${index === 0 ? "first" : ""}">
+                                      <div class="pc-rank">${index + 1} 순위</div>
+                                      <div class="pc-team">${escapeHtml(team.teamName)}</div>
+                                    </div>
+                                  `
+                                  )
+                                  .join("")}
+                              </div>`
+                        }
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              `
+                : `
+                <div class="card" style="padding:28px;">
+                  <div class="card-topline line-green"></div>
+                  <div style="text-align:center;margin-bottom:24px;">
+                    <div style="font-size:32px;font-weight:900;">보드게임 사용자</div>
+                    <div style="color:#9ca8bc;margin-top:6px;font-size:16px;">고객용 화면에는 팀이름과 로그인 시간만 표시됩니다.</div>
+                  </div>
+
+                  ${
+                    boardgameUsers.length === 0
+                      ? `<div class="pc-empty" style="min-height:420px;font-size:28px;">현재 보드게임 사용자 없음</div>`
+                      : `<div class="board-grid">
+                          ${boardgameUsers
+                            .map(
+                              (team, index) => `
+                            <div class="board-user ${index === 0 ? "first" : ""}">
+                              <div style="font-size:24px;font-weight:900;">${index + 1} 순서</div>
+                              <div style="font-size:26px;font-weight:800;">${escapeHtml(team.teamName)}</div>
+                              <div style="color:#a7b1c4;font-size:16px;">로그인 시간 ${team.boardgameJoinedAt || "-"}</div>
+                            </div>
+                          `
+                            )
+                            .join("")}
+                        </div>`
+                  }
+                </div>
+              `
+            }
+          </div>
+        `
+            : ""
+        }
+
+        ${
+          state.mode === "admin"
+            ? `
+          <div class="grid-gap">
+            ${
+              !state.adminOpen
+                ? `
+                <div class="card" style="max-width:480px;">
+                  <div class="section-title" style="margin-bottom:14px;">관리자 로그인</div>
+                  <input class="input" type="password" value="${escapeHtml(state.adminPassword)}" oninput="updateAdminPassword(this.value)" placeholder="관리자 비밀번호 입력" />
+                  <button class="btn btn-orange" style="margin-top:14px;width:100%;" onclick="handleAdminLogin()">로그인</button>
+                  <div style="color:#8f98aa;font-size:13px;margin-top:10px;">기본 비밀번호: 1234</div>
+                </div>
+              `
+                : `
+                <div class="grid-2">
+                  <div class="card">
+                    <div class="section-title" style="margin-bottom:14px;">고객 검색 / 포인트 지급</div>
+                    <input class="input" value="${escapeHtml(state.searchKeyword)}" oninput="updateSearchKeyword(this.value)" placeholder="팀명 또는 핸드폰번호 검색" />
+
+                    <div class="search-list">
+                      ${
+                        adminFilteredUsers.length === 0
+                          ? `<div class="muted">검색 결과가 없습니다.</div>`
+                          : adminFilteredUsers
+                              .map(
+                                (team) => `
+                              <div class="admin-item">
+                                <div class="flex-between">
+                                  <div style="font-weight:800;">${escapeHtml(team.teamName)}</div>
+                                  <div style="color:#b3bdd0;">${maskPhone(team.phone)}</div>
+                                </div>
+                                <div class="meta-row" style="color:#97a2b8;">
+                                  <span>테이블 ${escapeHtml(team.tableNo || "-")}</span>
+                                  <span>인원 ${team.people || "-"}명</span>
+                                  <span>포인트 ${team.points || 0}개</span>
+                                  <span>보드게임 ${team.boardgamePoint || 0}개</span>
+                                </div>
+                                <div class="grid-gap" style="gap:10px;">
+                                  <div class="point-buttons" style="gap:8px;">
+                                    ${[1, 2, 3, 4, 5]
+                                      .map(
+                                        (n) => `<button class="btn btn-soft" onclick="givePoints('${team.id}', ${n})">+${n}</button>`
+                                      )
+                                      .join("")}
+                                    <button class="btn btn-green" style="padding:9px 12px;" onclick="giveBoardgamePoint('${team.id}')">보드게임 1지급</button>
+                                  </div>
+                                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                    <button class="btn btn-direct" onclick="directEditPoints('${team.id}')">일반 포인트 직접수정</button>
+                                    <button class="btn btn-direct" onclick="directEditBoardgamePoints('${team.id}')">보드게임 포인트 직접수정</button>
+                                  </div>
+                                  <button class="btn btn-red" style="padding:10px 12px;" onclick="deleteTeam('${team.id}')">팀 완전삭제</button>
+                                </div>
+                              </div>
+                            `
+                              )
+                              .join("")
+                      }
+                    </div>
+                  </div>
+
+                  <div class="grid-gap">
+                    <div class="flex-between" style="align-items:center;">
+                      <div class="section-title" style="margin-bottom:0;">관리자용 실시간 대기화면</div>
+                      <button class="btn btn-gray" onclick="resetAll()">전체 초기화</button>
+                    </div>
+
+                    <div class="grid-gap">
+                      ${adminQueueCard("big", "큰방1", queueDetails.big)}
+                      ${adminQueueCard("small1", "작은방1", queueDetails.small1)}
+                      ${adminQueueCard("small2", "작은방2", queueDetails.small2)}
+                      ${adminQueueCard(BOARDGAME_KEY, "보드게임 사용자", queueDetails.boardgame)}
+                    </div>
+                  </div>
+                </div>
+              `
+            }
+          </div>
+        `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  render();
+}
+
+function setPcTab(tab) {
+  state.pcScreenTab = tab;
+  render();
+}
+
+function updateAdminPassword(value) {
+  state.adminPassword = value;
+}
+
+function updateSearchKeyword(value) {
+  state.searchKeyword = value;
+  render();
+}
+
+function updateCustomerForm(key, value) {
+  state.customerForm[key] = value;
+}
+
+window.setMode = setMode;
+window.setPcTab = setPcTab;
+window.updateAdminPassword = updateAdminPassword;
+window.updateSearchKeyword = updateSearchKeyword;
+window.updateCustomerForm = updateCustomerForm;
+window.handleCustomerLogin = handleCustomerLogin;
+window.handleCustomerSaveStep2 = handleCustomerSaveStep2;
+window.handleReserve = handleReserve;
+window.handleAdminLogin = handleAdminLogin;
+window.givePoints = givePoints;
+window.giveBoardgamePoint = giveBoardgamePoint;
+window.directEditPoints = directEditPoints;
+window.directEditBoardgamePoints = directEditBoardgamePoints;
+window.removeFromQueue = removeFromQueue;
+window.enterTeam = enterTeam;
+window.deleteTeam = deleteTeam;
+window.resetAll = resetAll;
+
+onSnapshot(teamsRef, (snapshot) => {
+  state.teams = snapshot.docs.map((item) => ({
+    id: item.id,
+    ...item.data()
+  }));
+
+  if (state.currentUserId && !getTeamById(state.currentUserId)) {
+    setCurrentUser(null);
+  }
+
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    state.customerForm.teamName = currentUser.teamName || state.customerForm.teamName;
+    state.customerForm.phone = currentUser.phone || state.customerForm.phone;
+    state.customerForm.people = currentUser.people || state.customerForm.people;
+    state.customerForm.tableNo = currentUser.tableNo || state.customerForm.tableNo;
+  } else {
+    const matchedByPhone = state.teams.find(
+      (team) => onlyNumber(team.phone) && onlyNumber(team.phone) === onlyNumber(state.customerForm.phone)
+    );
+    if (matchedByPhone) {
+      setCurrentUser(matchedByPhone.id);
+    }
+  }
+
+  state.ready = true;
+  render();
+});
+
+render();
