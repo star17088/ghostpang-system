@@ -43,8 +43,7 @@ function maskPhone(phone) {
   const p = onlyNumber(phone);
   if (p.length < 7) return p;
   if (p.length === 10) return `${p.slice(0, 3)}-${p.slice(3, 6)}-${p.slice(6)}`;
-  if (p.length >= 11)
-    return `${p.slice(0, 3)}-${p.slice(3, 7)}-${p.slice(7, 11)}`;
+  if (p.length >= 11) return `${p.slice(0, 3)}-${p.slice(3, 7)}-${p.slice(7, 11)}`;
   return p;
 }
 
@@ -73,7 +72,6 @@ function App() {
   const [pcScreenTab, setPcScreenTab] = useState("rooms");
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
-  const [customerStep, setCustomerStep] = useState(1);
   const [customerForm, setCustomerForm] = useState({
     teamName: "",
     phone: "",
@@ -190,7 +188,6 @@ function App() {
     }
 
     setCurrentUserId(foundUser.id);
-    setCustomerStep(2);
   }
 
   function handleCustomerSaveStep2() {
@@ -329,7 +326,6 @@ function App() {
     if (!ok) return;
     setData(initialData);
     setCurrentUserId(null);
-    setCustomerStep(1);
     setCustomerForm({
       teamName: "",
       phone: "",
@@ -339,12 +335,13 @@ function App() {
   }
 
   const cardStyle = {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 20,
+    background: "linear-gradient(180deg, #0f141f 0%, #0a0d14 100%)",
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 18,
     padding: 20,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-    backdropFilter: "blur(8px)",
+    boxShadow: "0 8px 25px rgba(0,0,0,0.35)",
+    position: "relative",
+    overflow: "hidden",
   };
 
   const buttonStyle = {
@@ -372,6 +369,20 @@ function App() {
 
     return (
       <div key={room.key} style={{ ...cardStyle }}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background:
+              room.key === "big"
+                ? "linear-gradient(90deg,#ff8a00,#ffb347)"
+                : "linear-gradient(90deg,#4c7dff,#6fa8ff)",
+          }}
+        />
+
         <div
           style={{
             display: "flex",
@@ -407,7 +418,14 @@ function App() {
                   alignItems: "center",
                   padding: "12px 14px",
                   borderRadius: 12,
-                  background: "rgba(255,255,255,0.04)",
+                  background:
+                    index === 0
+                      ? "linear-gradient(90deg, rgba(255,138,0,0.20), rgba(255,138,0,0.05))"
+                      : "rgba(255,255,255,0.04)",
+                  border:
+                    index === 0
+                      ? "1px solid rgba(255,138,0,0.3)"
+                      : "1px solid rgba(255,255,255,0.04)",
                 }}
               >
                 <div style={{ fontWeight: 700 }}>{index + 1}순위</div>
@@ -426,9 +444,23 @@ function App() {
 
     return (
       <div style={{ ...cardStyle }} key={queueKey}>
-        <div style={{ fontSize: 19, fontWeight: 800, marginBottom: 14 }}>
-          {title}
-        </div>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background:
+              queueKey === "big"
+                ? "linear-gradient(90deg,#ff8a00,#ffb347)"
+                : queueKey === "boardgame"
+                ? "linear-gradient(90deg,#3ddc97,#7ef0ba)"
+                : "linear-gradient(90deg,#4c7dff,#6fa8ff)",
+          }}
+        />
+
+        <div style={{ fontSize: 19, fontWeight: 800, marginBottom: 14 }}>{title}</div>
         {list.length === 0 ? (
           <div style={{ color: "#8e97a8", fontSize: 14 }}>현재 대기 없음</div>
         ) : (
@@ -536,7 +568,7 @@ function App() {
               고스트팡 대기 시스템
             </div>
             <div style={{ color: "#97a2b8", marginTop: 6 }}>
-              고객용 / 관리자용 실시간 대기 등록
+              고객용 / 관리자용 / PC용 실시간 대기 등록
             </div>
           </div>
 
@@ -575,13 +607,7 @@ function App() {
         </div>
 
         {mode === "customer" && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.05fr 1.2fr",
-              gap: 20,
-            }}
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1.2fr", gap: 20 }}>
             <div style={{ ...cardStyle, alignSelf: "start" }}>
               <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 18 }}>
                 고객 로그인 / 정보입력
@@ -589,44 +615,31 @@ function App() {
 
               <div style={{ display: "grid", gap: 14 }}>
                 <div>
-                  <div
-                    style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}
-                  >
+                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
                     팀이름
                   </div>
                   <input
                     style={inputStyle}
                     value={customerForm.teamName}
-                    onChange={(e) =>
-                      updateCustomerForm("teamName", e.target.value)
-                    }
+                    onChange={(e) => updateCustomerForm("teamName", e.target.value)}
                     placeholder="예: 또야팀"
                   />
                 </div>
 
                 <div>
-                  <div
-                    style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}
-                  >
+                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
                     핸드폰번호
                   </div>
                   <input
                     style={inputStyle}
                     value={customerForm.phone}
-                    onChange={(e) =>
-                      updateCustomerForm("phone", onlyNumber(e.target.value))
-                    }
+                    onChange={(e) => updateCustomerForm("phone", onlyNumber(e.target.value))}
                     placeholder="숫자만 입력"
                   />
                 </div>
 
                 <button
-                  style={{
-                    ...buttonStyle,
-                    background: "#ff8a00",
-                    color: "#111",
-                    marginTop: 4,
-                  }}
+                  style={{ ...buttonStyle, background: "#ff8a00", color: "#111", marginTop: 4 }}
                   onClick={handleCustomerLogin}
                 >
                   로그인
@@ -642,45 +655,31 @@ function App() {
                   gap: 14,
                 }}
               >
-                <div style={{ fontSize: 18, fontWeight: 800 }}>
-                  2단계 정보입력
-                </div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>2단계 정보입력</div>
                 <div>
-                  <div
-                    style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}
-                  >
+                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
                     인원 수
                   </div>
                   <input
                     style={inputStyle}
                     value={customerForm.people}
-                    onChange={(e) =>
-                      updateCustomerForm("people", onlyNumber(e.target.value))
-                    }
+                    onChange={(e) => updateCustomerForm("people", onlyNumber(e.target.value))}
                     placeholder="예: 4"
                   />
                 </div>
                 <div>
-                  <div
-                    style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}
-                  >
+                  <div style={{ fontSize: 14, color: "#aab4c7", marginBottom: 8 }}>
                     테이블 번호
                   </div>
                   <input
                     style={inputStyle}
                     value={customerForm.tableNo}
-                    onChange={(e) =>
-                      updateCustomerForm("tableNo", e.target.value)
-                    }
+                    onChange={(e) => updateCustomerForm("tableNo", e.target.value)}
                     placeholder="예: A-3"
                   />
                 </div>
                 <button
-                  style={{
-                    ...buttonStyle,
-                    background: "#4c7dff",
-                    color: "white",
-                  }}
+                  style={{ ...buttonStyle, background: "#4c7dff", color: "white" }}
                   onClick={handleCustomerSaveStep2}
                 >
                   정보 저장
@@ -699,9 +698,7 @@ function App() {
                     gap: 8,
                   }}
                 >
-                  <div style={{ fontWeight: 900, fontSize: 18 }}>
-                    {currentUser.teamName}
-                  </div>
+                  <div style={{ fontWeight: 900, fontSize: 18 }}>{currentUser.teamName}</div>
                   <div style={{ color: "#ffd7a6" }}>
                     예약 가능 포인트: {currentUser.points || 0}개
                   </div>
@@ -710,8 +707,7 @@ function App() {
                   </div>
                   {(currentUser.people || currentUser.tableNo) && (
                     <div style={{ color: "#ffd7a6" }}>
-                      인원 {currentUser.people || "-"}명 · 테이블{" "}
-                      {currentUser.tableNo || "-"}
+                      인원 {currentUser.people || "-"}명 · 테이블 {currentUser.tableNo || "-"}
                     </div>
                   )}
                 </div>
@@ -735,9 +731,7 @@ function App() {
             </div>
 
             <div style={{ display: "grid", gap: 18 }}>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                실시간 대기화면
-              </div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>실시간 대기화면</div>
               <div style={{ display: "grid", gap: 16 }}>
                 {ROOM_OPTIONS.map(renderCustomerQueueCard)}
               </div>
@@ -759,9 +753,7 @@ function App() {
               }}
             >
               <div>
-                <div style={{ fontSize: 28, fontWeight: 900 }}>
-                  고스트팡 실시간 대기 현황
-                </div>
+                <div style={{ fontSize: 28, fontWeight: 900 }}>고스트팡 실시간 대기 현황</div>
                 <div style={{ color: "#a8b2c5", marginTop: 6, fontSize: 15 }}>
                   PC 또는 TV 전체화면용 안내 화면
                 </div>
@@ -781,8 +773,7 @@ function App() {
                 <button
                   style={{
                     ...buttonStyle,
-                    background:
-                      pcScreenTab === "boardgame" ? "#ff8a00" : "#20283a",
+                    background: pcScreenTab === "boardgame" ? "#ff8a00" : "#20283a",
                     color: pcScreenTab === "boardgame" ? "#111" : "white",
                   }}
                   onClick={() => setPcScreenTab("boardgame")}
@@ -793,15 +784,14 @@ function App() {
             </div>
 
             {pcScreenTab === "rooms" && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 18,
-                }}
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 18 }}>
                 {ROOM_OPTIONS.map((room) => {
                   const list = visibleCustomerQueues[room.key];
+                  const topBarColor =
+                    room.key === "big"
+                      ? "linear-gradient(90deg,#ff8a00,#ffb347)"
+                      : "linear-gradient(90deg,#4c7dff,#6fa8ff)";
+
                   return (
                     <div
                       key={room.key}
@@ -814,17 +804,20 @@ function App() {
                         gap: 16,
                       }}
                     >
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 30, fontWeight: 900 }}>
-                          {room.label}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 16,
-                            color: "#97a2b8",
-                            marginTop: 6,
-                          }}
-                        >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 4,
+                          background: topBarColor,
+                        }}
+                      />
+
+                      <div style={{ textAlign: "center", marginTop: 4 }}>
+                        <div style={{ fontSize: 30, fontWeight: 900 }}>{room.label} 대기</div>
+                        <div style={{ fontSize: 16, color: "#97a2b8", marginTop: 6 }}>
                           {room.size}
                         </div>
                       </div>
@@ -840,7 +833,7 @@ function App() {
                             fontWeight: 700,
                           }}
                         >
-                          현재 대기 없음
+                          대기 없음
                         </div>
                       ) : (
                         <div style={{ display: "grid", gap: 14 }}>
@@ -851,11 +844,11 @@ function App() {
                                 borderRadius: 18,
                                 background:
                                   index === 0
-                                    ? "rgba(255,138,0,0.16)"
+                                    ? "linear-gradient(90deg, rgba(255,138,0,0.25), rgba(255,138,0,0.05))"
                                     : "rgba(255,255,255,0.05)",
                                 border:
                                   index === 0
-                                    ? "1px solid rgba(255,138,0,0.35)"
+                                    ? "1px solid rgba(255,138,0,0.4)"
                                     : "1px solid rgba(255,255,255,0.05)",
                                 padding: "18px 20px",
                                 display: "flex",
@@ -864,10 +857,10 @@ function App() {
                                 gap: 16,
                               }}
                             >
-                              <div style={{ fontSize: 24, fontWeight: 900 }}>
+                              <div style={{ fontSize: 28, fontWeight: 900 }}>
                                 {index + 1} 순위
                               </div>
-                              <div style={{ fontSize: 24, fontWeight: 800 }}>
+                              <div style={{ fontSize: 28, fontWeight: 800 }}>
                                 {user.teamName}
                               </div>
                             </div>
@@ -882,10 +875,19 @@ function App() {
 
             {pcScreenTab === "boardgame" && (
               <div style={{ ...cardStyle, padding: 28 }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background: "linear-gradient(90deg,#3ddc97,#7ef0ba)",
+                  }}
+                />
+
                 <div style={{ textAlign: "center", marginBottom: 24 }}>
-                  <div style={{ fontSize: 32, fontWeight: 900 }}>
-                    보드게임 사용자
-                  </div>
+                  <div style={{ fontSize: 32, fontWeight: 900 }}>보드게임 사용자</div>
                   <div style={{ color: "#9ca8bc", marginTop: 6, fontSize: 16 }}>
                     고객용 화면에는 팀이름과 로그인 시간만 표시됩니다.
                   </div>
@@ -905,30 +907,24 @@ function App() {
                     현재 보드게임 사용자 없음
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: 16,
-                    }}
-                  >
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
                     {boardgameUsers.map((user, index) => (
                       <div
                         key={user.id}
                         style={{
                           borderRadius: 18,
                           background: "rgba(255,255,255,0.05)",
+                          border:
+                            index === 0
+                              ? "1px solid rgba(61,220,151,0.35)"
+                              : "1px solid rgba(255,255,255,0.04)",
                           padding: 20,
                           display: "grid",
                           gap: 8,
                         }}
                       >
-                        <div style={{ fontSize: 24, fontWeight: 900 }}>
-                          {index + 1} 순서
-                        </div>
-                        <div style={{ fontSize: 26, fontWeight: 800 }}>
-                          {user.teamName}
-                        </div>
+                        <div style={{ fontSize: 24, fontWeight: 900 }}>{index + 1} 순서</div>
+                        <div style={{ fontSize: 26, fontWeight: 800 }}>{user.teamName}</div>
                         <div style={{ color: "#a7b1c4", fontSize: 16 }}>
                           로그인 시간 {user.boardgameJoinedAt || "-"}
                         </div>
@@ -945,9 +941,7 @@ function App() {
           <div style={{ display: "grid", gap: 20 }}>
             {!adminOpen ? (
               <div style={{ ...cardStyle, maxWidth: 480 }}>
-                <div
-                  style={{ fontSize: 22, fontWeight: 900, marginBottom: 14 }}
-                >
+                <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 14 }}>
                   관리자 로그인
                 </div>
                 <input
@@ -975,21 +969,9 @@ function App() {
               </div>
             ) : (
               <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1.05fr 1.2fr",
-                    gap: 20,
-                  }}
-                >
+                <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1.2fr", gap: 20 }}>
                   <div style={{ ...cardStyle, alignSelf: "start" }}>
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 900,
-                        marginBottom: 14,
-                      }}
-                    >
+                    <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 14 }}>
                       고객 검색 / 포인트 지급
                     </div>
                     <input
@@ -1009,9 +991,7 @@ function App() {
                       }}
                     >
                       {adminFilteredUsers.length === 0 ? (
-                        <div style={{ color: "#8e97a8" }}>
-                          검색 결과가 없습니다.
-                        </div>
+                        <div style={{ color: "#8e97a8" }}>검색 결과가 없습니다.</div>
                       ) : (
                         adminFilteredUsers.map((user) => (
                           <div
@@ -1032,12 +1012,8 @@ function App() {
                                 flexWrap: "wrap",
                               }}
                             >
-                              <div style={{ fontWeight: 800 }}>
-                                {user.teamName}
-                              </div>
-                              <div style={{ color: "#b3bdd0" }}>
-                                {maskPhone(user.phone)}
-                              </div>
+                              <div style={{ fontWeight: 800 }}>{user.teamName}</div>
+                              <div style={{ color: "#b3bdd0" }}>{maskPhone(user.phone)}</div>
                             </div>
                             <div
                               style={{
@@ -1054,13 +1030,7 @@ function App() {
                               <span>보드게임 {user.boardgamePoint || 0}개</span>
                             </div>
                             <div style={{ display: "grid", gap: 10 }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 8,
-                                  flexWrap: "wrap",
-                                }}
-                              >
+                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                                 {[1, 2, 3, 4, 5].map((n) => (
                                   <button
                                     key={n}
@@ -1117,9 +1087,7 @@ function App() {
                                     setData((prev) => ({
                                       ...prev,
                                       users: prev.users.map((u) =>
-                                        u.id === user.id
-                                          ? { ...u, points: Math.floor(num) }
-                                          : u
+                                        u.id === user.id ? { ...u, points: Math.floor(num) } : u
                                       ),
                                     }));
                                   }}
@@ -1148,12 +1116,9 @@ function App() {
 
                                     const nextValue = Math.floor(num);
                                     setData((prev) => {
-                                      const alreadyInQueue =
-                                        prev.queues.boardgame.includes(user.id);
-                                      const shouldAddQueue =
-                                        nextValue >= 1 && !alreadyInQueue;
-                                      const shouldRemoveQueue =
-                                        nextValue < 1 && alreadyInQueue;
+                                      const alreadyInQueue = prev.queues.boardgame.includes(user.id);
+                                      const shouldAddQueue = nextValue >= 1 && !alreadyInQueue;
+                                      const shouldRemoveQueue = nextValue < 1 && alreadyInQueue;
 
                                       return {
                                         users: prev.users.map((u) =>
@@ -1163,8 +1128,7 @@ function App() {
                                                 boardgamePoint: nextValue,
                                                 boardgameJoinedAt:
                                                   nextValue >= 1
-                                                    ? u.boardgameJoinedAt ||
-                                                      nowText()
+                                                    ? u.boardgameJoinedAt || nowText()
                                                     : "",
                                               }
                                             : u
@@ -1172,14 +1136,9 @@ function App() {
                                         queues: {
                                           ...prev.queues,
                                           boardgame: shouldAddQueue
-                                            ? [
-                                                ...prev.queues.boardgame,
-                                                user.id,
-                                              ]
+                                            ? [...prev.queues.boardgame, user.id]
                                             : shouldRemoveQueue
-                                            ? prev.queues.boardgame.filter(
-                                                (id) => id !== user.id
-                                              )
+                                            ? prev.queues.boardgame.filter((id) => id !== user.id)
                                             : prev.queues.boardgame,
                                         },
                                       };
@@ -1210,11 +1169,7 @@ function App() {
                         관리자용 실시간 대기화면
                       </div>
                       <button
-                        style={{
-                          ...buttonStyle,
-                          background: "#5d667a",
-                          color: "white",
-                        }}
+                        style={{ ...buttonStyle, background: "#5d667a", color: "white" }}
                         onClick={resetAll}
                       >
                         전체 초기화
