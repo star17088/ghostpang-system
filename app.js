@@ -135,7 +135,6 @@ function setPcTab(tab) {
 
 function updateCustomerForm(key, value) {
   state.customerForm[key] = value;
-  render();
 }
 
 function updateAdminPassword(value) {
