@@ -1,16 +1,16 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// firebase.js
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  updateDoc,
   doc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  getDoc,
+  setDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyADGR45Y4rzrLsqk7dt05iCIu2dONSE3NI",
+  apiKey: "여기 그대로",
   authDomain: "ghostpang.firebaseapp.com",
   projectId: "ghostpang",
   storageBucket: "ghostpang.firebasestorage.app",
@@ -21,12 +21,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export {
-  db,
-  collection,
-  addDoc,
-  onSnapshot,
-  updateDoc,
-  doc,
-  deleteDoc
-};
+const DATA_DOC = doc(db, "ghostpang", "main");
+
+export { db, DATA_DOC, getDoc, setDoc, onSnapshot };
