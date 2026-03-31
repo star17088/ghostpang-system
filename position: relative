@@ -210,6 +210,25 @@ input::placeholder {
   color: #fff;
 }
 
+.delete-user-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #7a2d3a;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.user-item-top {
+  padding-right: 40px;
+}
+
 .room-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -440,6 +459,8 @@ input::placeholder {
   background: rgba(255,255,255,0.04);
   border-radius: 14px;
   padding: 14px;
+
+  position: relative;
 }
 
 .user-item-top,
