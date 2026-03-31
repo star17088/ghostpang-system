@@ -277,6 +277,7 @@ if (["big", "small1", "small2"].includes(queueKey) && wasEmpty) {
 
 saveData();
 render();
+}  
 
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
@@ -594,26 +595,25 @@ function pcScreenHtml() {
                     <div class="pc-room-title">${escapeHtml(room.label)}</div>
                     <div class="pc-room-size">${escapeHtml(room.size)}</div>
 
-                    ${
-                      list.length === 0
-                        ? `<div class="pc-empty">대기 없음</div>`
-                        : `<div class="pc-queue-list">
-
-                            ${list
-                              .map(
-                                (user, index) => `
-                                  <div class="queue-item ${index === 0 ? "first" : ""}">
-                                    <div class="rank">${index + 1}순위</div>
-                                    <div class="team-wrap">
-                                    <div class="team">${escapeHtml(user.teamName)}</div>
-                                    <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
-                                  </div>
-                                  </div>
-                                `
-                              )
-                              .join("")}
-                          </div>`
-                    }
+${
+  list.length === 0
+    ? `<div class="pc-empty">대기 없음</div>`
+    : `<div class="pc-queue-list">
+        ${list
+          .map(
+            (user, index) => `
+              <div class="queue-item ${index === 0 ? "first" : ""}">
+                <div class="rank">${index + 1}순위</div>
+                <div class="team-wrap">
+                  <div class="team">${escapeHtml(user.teamName)}</div>
+                  <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
+                </div>
+              </div>
+            `
+          )
+          .join("")}
+      </div>`
+}
                   </section>
                 `;
               }).join("")}
