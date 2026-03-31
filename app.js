@@ -143,7 +143,6 @@ function updateAdminPassword(value) {
 
 function updateSearchKeyword(value) {
   state.searchKeyword = value;
-  render();
 }
 
 function handleCustomerLogin() {
