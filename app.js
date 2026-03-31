@@ -278,6 +278,34 @@ function subtractPoints(userId, amount) {
   render();
 }
 
+function deleteUser(userId) {
+  const user = getUserById(userId);
+  if (!user) return;
+
+  const ok = window.confirm(`${user.teamName || "이 고객"} 정보를 삭제할까요?`);
+  if (!ok) return;
+
+  state.data.users = state.data.users.filter((u) => u.id !== userId);
+
+  state.data.queues.big = state.data.queues.big.filter((id) => id !== userId);
+  state.data.queues.small1 = state.data.queues.small1.filter((id) => id !== userId);
+  state.data.queues.small2 = state.data.queues.small2.filter((id) => id !== userId);
+  state.data.queues.boardgame = state.data.queues.boardgame.filter((id) => id !== userId);
+
+  if (state.currentUserId === userId) {
+    state.currentUserId = null;
+    state.customerForm = {
+      teamName: "",
+      phone: "",
+      people: "",
+      tableNo: "",
+    };
+  }
+
+  saveData();
+  render();
+}
+
 function giveBoardgamePoint(userId) {
   const user = getUserById(userId);
   if (!user) return;
@@ -619,7 +647,9 @@ function adminScreenHtml() {
                 : users
                     .map(
                       (user) => `
-                        <div class="user-item">
+                          <div class="user-item">
+                            <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
+
                           <div class="user-item-top">
                             <div class="user-item-name">${escapeHtml(user.teamName)}</div>
                             <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
