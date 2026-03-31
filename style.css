@@ -185,11 +185,6 @@ input::placeholder {
   color: #fff;
 }
 
-.btn-hidden {
-  background: #141b29;
-  color: #738099;
-}
-
 .btn-red {
   background: #ff5c5c;
   color: #fff;
@@ -296,14 +291,6 @@ input::placeholder {
 .btn-stack {
   display: grid;
   gap: 10px;
-}
-
-.spacer-large {
-  min-height: 180px;
-}
-
-.admin-hidden-card {
-  margin-top: auto;
 }
 
 .pc-wrap {
