@@ -15,6 +15,11 @@ const initialData = {
     small2: [],
     boardgame: [],
   },
+  queueTimers: {
+    big: null,
+    small1: null,
+    small2: null,
+  },
 };
 
 let state = {
@@ -30,7 +35,7 @@ let state = {
     people: "",
     tableNo: "",
   },
-  data: initialData,
+ data: JSON.parse(JSON.stringify(initialData)),
 };
 
 onSnapshot(DATA_DOC, (snap) => {
@@ -93,6 +98,21 @@ function maskPhone(phone) {
   if (p.length === 10) return `${p.slice(0, 3)}-${p.slice(3, 6)}-${p.slice(6)}`;
   if (p.length >= 11) return `${p.slice(0, 3)}-${p.slice(3, 7)}-${p.slice(7, 11)}`;
   return p;
+}
+
+function getNowMinute() {
+  return Math.floor(Date.now() / 60000);
+}
+
+function getRemainingMinutes(queueKey, index) {
+  if (!["big", "small1", "small2"].includes(queueKey)) return null;
+
+  const startedAt = state.data.queueTimers?.[queueKey];
+  if (!startedAt) return (index + 1) * 16;
+
+  const passed = Math.max(0, getNowMinute() - startedAt);
+  const total = (index + 1) * 16;
+  return Math.max(0, total - passed);
 }
 
 function getCurrentUser() {
@@ -246,11 +266,17 @@ function handleReserve(queueKey) {
     return;
   }
 
-  currentUser.points = (currentUser.points || 0) - 1;
-  state.data.queues[queueKey].push(currentUser.id);
-  saveData();
-  render();
+currentUser.points = (currentUser.points || 0) - 1;
+
+const wasEmpty = state.data.queues[queueKey].length === 0;
+state.data.queues[queueKey].push(currentUser.id);
+
+if (["big", "small1", "small2"].includes(queueKey) && wasEmpty) {
+  state.data.queueTimers[queueKey] = getNowMinute();
 }
+
+saveData();
+render();
 
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
@@ -333,6 +359,14 @@ function removeFromQueue(queueKey, userId) {
     }
   }
 
+  if (["big", "small1", "small2"].includes(queueKey)) {
+    if (state.data.queues[queueKey].length > 0) {
+      state.data.queueTimers[queueKey] = getNowMinute();
+    } else {
+      state.data.queueTimers[queueKey] = null;
+    }
+  }
+
   saveData();
   render();
 }
@@ -373,15 +407,16 @@ function roomCardHtml(room) {
       </div>
 
       ${
-        list.length === 0
-          ? `<div class="empty-text">현재 대기 없음</div>`
-          : `<div class="queue-list">
-              ${list
+
+                ${list
                 .map(
                   (user, index) => `
-                    <div class="queue-item ${index === 0 ? "first" : ""}">
-                      <div class="rank">${index + 1}순위</div>
-                      <div class="team">${escapeHtml(user.teamName)}</div>
+                    <div class="pc-queue-item ${index === 0 ? "first" : ""}">
+                      <div class="pc-rank">${index + 1}순위</div>
+                      <div class="pc-team-wrap">
+                      <div class="pc-team">${escapeHtml(user.teamName)}</div>
+                      <div class="pc-wait">${getRemainingMinutes(room.key, index)}분</div>
+                    </div>
                     </div>
                   `
                 )
@@ -563,12 +598,16 @@ function pcScreenHtml() {
                       list.length === 0
                         ? `<div class="pc-empty">대기 없음</div>`
                         : `<div class="pc-queue-list">
+
                             ${list
                               .map(
                                 (user, index) => `
-                                  <div class="pc-queue-item ${index === 0 ? "first" : ""}">
-                                    <div class="pc-rank">${index + 1}순위</div>
-                                    <div class="pc-team">${escapeHtml(user.teamName)}</div>
+                                  <div class="queue-item ${index === 0 ? "first" : ""}">
+                                    <div class="rank">${index + 1}순위</div>
+                                    <div class="team-wrap">
+                                    <div class="team">${escapeHtml(user.teamName)}</div>
+                                    <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
+                                  </div>
                                   </div>
                                 `
                               )
@@ -774,4 +813,9 @@ window.removeFromQueue = removeFromQueue;
 window.resetAll = resetAll;
 window.onlyNumber = onlyNumber;
 
+setInterval(() => {
+  if (state.screen === "pc" || state.screen === "customer" || state.screen === "admin") {
+    render();
+  }
+}, 60000);
 loadData();
