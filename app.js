@@ -59,6 +59,10 @@ async function loadData() {
 
   if (snap.exists()) {
     state.data = snap.data();
+
+    if (!state.data.queueTimers) {
+      state.data.queueTimers = { big: null, small1: null, small2: null };
+    }
   } else {
     await setDoc(DATA_DOC, state.data);
   }
@@ -350,6 +354,10 @@ function giveBoardgamePoint(userId) {
 }
 
 function removeFromQueue(queueKey, userId) {
+  if (!state.data.queueTimers) {
+    state.data.queueTimers = { big: null, small1: null, small2: null };
+  }
+
   state.data.queues[queueKey] = state.data.queues[queueKey].filter((id) => id !== userId);
 
   if (queueKey === "boardgame") {
