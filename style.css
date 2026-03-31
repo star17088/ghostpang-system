@@ -205,6 +205,11 @@ input::placeholder {
   color: #fff;
 }
 
+.btn-point-minus {
+  background: #7a2d3a;
+  color: #fff;
+}
+
 .room-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
