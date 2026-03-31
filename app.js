@@ -408,16 +408,18 @@ function roomCardHtml(room) {
       </div>
 
       ${
-
-                ${list
+        list.length === 0
+          ? `<div class="pc-empty">대기 없음</div>`
+          : `<div class="pc-queue-list">
+              ${list
                 .map(
                   (user, index) => `
                     <div class="pc-queue-item ${index === 0 ? "first" : ""}">
                       <div class="pc-rank">${index + 1}순위</div>
                       <div class="pc-team-wrap">
-                      <div class="pc-team">${escapeHtml(user.teamName)}</div>
-                      <div class="pc-wait">${getRemainingMinutes(room.key, index)}분</div>
-                    </div>
+                        <div class="pc-team">${escapeHtml(user.teamName)}</div>
+                        <div class="pc-wait">${getRemainingMinutes(room.key, index)}분</div>
+                      </div>
                     </div>
                   `
                 )
