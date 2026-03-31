@@ -269,6 +269,15 @@ function givePoints(userId, amount) {
   render();
 }
 
+function subtractPoints(userId, amount) {
+  const user = getUserById(userId);
+  if (!user) return;
+
+  user.points = Math.max(0, (user.points || 0) - amount);
+  saveData();
+  render();
+}
+
 function giveBoardgamePoint(userId) {
   const user = getUserById(userId);
   if (!user) return;
