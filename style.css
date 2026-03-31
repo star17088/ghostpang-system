@@ -558,6 +558,12 @@ input::placeholder {
   }
 }
 
+@media (max-width: 768px) {
+  .room-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 14px;
@@ -589,4 +595,10 @@ input::placeholder {
     display: grid;
     grid-template-columns: 1fr;
   }
+  
+}
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 }
