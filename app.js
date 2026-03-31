@@ -720,8 +720,10 @@ function renderHeader() {
   return `
     <header class="top-header">
       <div>
-        <h1>고스트팡 대기 시스템</h1>
-        <p>고객용 / 관리자용 / PC용</p>
+        <h1>고스트팡을 찾아주셔서 감사합니다.</h1>
+        <p> 해당 인원 수에 맞게 방을 선택해 주세요</p>
+        <p> (무료로 입장한 미취학 아동은 인원수에 포함되지 않습니다) </p>
+        
       </div>
 
       <div class="top-tabs">
