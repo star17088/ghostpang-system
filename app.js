@@ -157,24 +157,27 @@ function handleCustomerLogin() {
     return;
   }
 
-  let user = state.data.users.find((u) => onlyNumber(u.phone) === phone);
+  let user = state.data.users.find(
+  (u) =>
+    onlyNumber(u.phone) === phone &&
+    String(u.teamName || "").trim() === teamName
+  );
 
   if (!user) {
-    user = {
-      id: makeId(),
-      teamName,
-      phone,
-      people: "",
-      tableNo: "",
-      points: 0,
-      boardgamePoint: 0,
-      boardgameJoinedAt: "",
-      createdAt: nowText(),
-    };
-    state.data.users.push(user);
-  } else {
-    user.teamName = teamName;
-  }
+  user = {
+    id: makeId(),
+    teamName,
+    phone,
+    people: "",
+    tableNo: "",
+    points: 0,
+    boardgamePoint: 0,
+    boardgameJoinedAt: "",
+    createdAt: nowText(),
+  };
+  state.data.users.push(user);
+}
+  
 
   state.currentUserId = user.id;
   state.customerForm.people = user.people || "";
