@@ -751,4 +751,22 @@ function render() {
   `;
 }
 
+window.setScreen = setScreen;
+window.setPcTab = setPcTab;
+window.updateCustomerForm = updateCustomerForm;
+window.updateAdminPassword = updateAdminPassword;
+window.updateSearchKeyword = updateSearchKeyword;
+window.handleCustomerLogin = handleCustomerLogin;
+window.handleCustomerSaveStep2 = handleCustomerSaveStep2;
+window.logoutCustomer = logoutCustomer;
+window.handleReserve = handleReserve;
+window.handleAdminLogin = handleAdminLogin;
+window.givePoints = givePoints;
+window.subtractPoints = subtractPoints;
+window.deleteUser = deleteUser;
+window.giveBoardgamePoint = giveBoardgamePoint;
+window.removeFromQueue = removeFromQueue;
+window.resetAll = resetAll;
+window.onlyNumber = onlyNumber;
+
 loadData();
