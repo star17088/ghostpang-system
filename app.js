@@ -470,29 +470,6 @@ function customerScreenHtml() {
               </section>
             `
         }
-
-        <div class="spacer-large"></div>
-
-        <section class="card admin-hidden-card">
-          ${
-            !state.adminVisible
-              ? `
-                <button class="btn btn-hidden full" onclick="showAdminLogin()">관리자</button>
-              `
-              : `
-                <h3 class="small-title">관리자 로그인</h3>
-                <div class="form-group">
-                  <input
-                    type="password"
-                    value="${escapeHtml(state.adminPasswordInput)}"
-                    oninput="updateAdminPassword(this.value)"
-                    placeholder="비밀번호 입력"
-                  />
-                </div>
-                <button class="btn btn-orange full" onclick="handleAdminLogin()">로그인</button>
-              `
-          }
-        </section>
       </div>
 
       <div class="right-col">
