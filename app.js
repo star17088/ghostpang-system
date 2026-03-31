@@ -1,4 +1,4 @@
-const STORAGE_KEY = "ghostpang_waiting_system_v_final_html";
+import { DATA_DOC, getDoc, setDoc, onSnapshot } from "./firebase.js";
 const ADMIN_PASSWORD = "0702";
 
 const ROOM_OPTIONS = [
@@ -21,7 +21,6 @@ let state = {
   screen: "customer", // customer | pc | admin
   pcTab: "rooms", // rooms | boardgame
   currentUserId: null,
-  adminVisible: false,
   adminLoggedIn: false,
   adminPasswordInput: "",
   searchKeyword: "",
@@ -31,31 +30,35 @@ let state = {
     people: "",
     tableNo: "",
   },
-  data: loadData(),
+  data: initialData,
 };
 
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return JSON.parse(JSON.stringify(initialData));
-    const parsed = JSON.parse(raw);
+onSnapshot(DATA_DOC, (snap) => {
+  if (snap.exists()) {
+    state.data = snap.data();
+    render();
+  }
+});
 
-    return {
-      users: Array.isArray(parsed.users) ? parsed.users : [],
-      queues: {
-        big: Array.isArray(parsed.queues?.big) ? parsed.queues.big : [],
-        small1: Array.isArray(parsed.queues?.small1) ? parsed.queues.small1 : [],
-        small2: Array.isArray(parsed.queues?.small2) ? parsed.queues.small2 : [],
-        boardgame: Array.isArray(parsed.queues?.boardgame) ? parsed.queues.boardgame : [],
-      },
-    };
+async function saveData() {
+  try {
+    await setDoc(DATA_DOC, state.data);
   } catch (e) {
-    return JSON.parse(JSON.stringify(initialData));
+    alert("저장 오류 발생");
+    console.error(e);
   }
 }
 
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+async function loadData() {
+  const snap = await getDoc(DATA_DOC);
+
+  if (snap.exists()) {
+    state.data = snap.data();
+  } else {
+    await setDoc(DATA_DOC, state.data);
+  }
+
+  render();
 }
 
 function onlyNumber(value) {
@@ -246,11 +249,6 @@ function handleReserve(queueKey) {
   render();
 }
 
-function showAdminLogin() {
-  state.adminVisible = true;
-  render();
-}
-
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
     state.adminLoggedIn = true;
@@ -323,6 +321,15 @@ function giveBoardgamePoint(userId) {
 
 function removeFromQueue(queueKey, userId) {
   state.data.queues[queueKey] = state.data.queues[queueKey].filter((id) => id !== userId);
+
+  if (queueKey === "boardgame") {
+    const user = getUserById(userId);
+    if (user) {
+      user.boardgamePoint = 0;
+      user.boardgameJoinedAt = "";
+    }
+  }
+
   saveData();
   render();
 }
@@ -714,13 +721,12 @@ function renderHeader() {
     <header class="top-header">
       <div>
         <h1>고스트팡 대기 시스템</h1>
-        <p>고객용 / 관리자용 / PC용</p>
+        <p>고객용 / PC용</p>
       </div>
 
       <div class="top-tabs">
         <button class="btn ${state.screen === "customer" ? "btn-orange" : "btn-tab"}" onclick="setScreen('customer')">고객용 화면</button>
         <button class="btn ${state.screen === "pc" ? "btn-orange" : "btn-tab"}" onclick="setScreen('pc')">PC용 화면</button>
-        <button class="btn ${state.screen === "admin" ? "btn-orange" : "btn-tab"}" onclick="setScreen('admin')">관리자용 화면</button>
       </div>
     </header>
   `;
@@ -744,4 +750,4 @@ function render() {
   `;
 }
 
-render();
+loadData();
