@@ -633,10 +633,19 @@ function adminScreenHtml() {
                           </div>
 
                           <div class="point-row">
+                           ${[1,2,3,4,5].map(n => `
+                            <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
+                            `).join("")}
+                          </div>
+
+                          <div class="point-row">
                             ${[1,2,3,4,5].map(n => `
                               <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
                             `).join("")}
-                            <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
+                          </div>
+
+                          <div class="point-row">
+                              <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
                           </div>
                         </div>
                       `
