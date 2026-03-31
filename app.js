@@ -721,12 +721,13 @@ function renderHeader() {
     <header class="top-header">
       <div>
         <h1>고스트팡 대기 시스템</h1>
-        <p>고객용 / PC용</p>
+        <p>고객용 / 관리자용 / PC용</p>
       </div>
 
       <div class="top-tabs">
         <button class="btn ${state.screen === "customer" ? "btn-orange" : "btn-tab"}" onclick="setScreen('customer')">고객용 화면</button>
         <button class="btn ${state.screen === "pc" ? "btn-orange" : "btn-tab"}" onclick="setScreen('pc')">PC용 화면</button>
+        <button class="btn ${state.screen === "admin" ? "btn-orange" : "btn-tab"}" onclick="setScreen('admin')">관리자용 화면</button>
       </div>
     </header>
   `;
