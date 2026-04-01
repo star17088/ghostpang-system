@@ -841,7 +841,16 @@ function renderScreen() {
   return customerScreenHtml();
 }
 
+function cleanupOldUsers() {
+  const now = Date.now();
+
+  state.data.users = state.data.users.filter(u => {
+    return now - u.createdAt < 1000 * 60 * 60 * 6;
+  });
+}
+
 function render() {
+  cleanupOldUsers();
   const app = document.getElementById("app");
   app.innerHTML = `
     <div class="page">
