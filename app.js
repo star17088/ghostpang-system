@@ -29,13 +29,14 @@ let state = {
   adminLoggedIn: false,
   adminPasswordInput: "",
   searchKeyword: "",
+  showAllUsers: false,
   customerForm: {
     teamName: "",
     phone: "",
     people: "",
     tableNo: "",
   },
- data: JSON.parse(JSON.stringify(initialData)),
+  data: JSON.parse(JSON.stringify(initialData)),
 };
 
 onSnapshot(DATA_DOC, (snap) => {
@@ -139,7 +140,12 @@ function getBoardgameUsers() {
 
 function getFilteredUsers() {
   const keyword = state.searchKeyword.trim();
-  if (!keyword) return state.data.users;
+
+  if (!keyword && !state.showAllUsers) return [];
+
+  if (!keyword && state.showAllUsers) {
+    return state.data.users;
+  }
 
   const numberKeyword = onlyNumber(keyword);
   return state.data.users.filter((u) => {
@@ -183,6 +189,16 @@ function updateAdminPassword(value) {
 
 function updateSearchKeyword(value) {
   state.searchKeyword = value;
+  if (String(value).trim()) {
+    state.showAllUsers = false;
+  }
+  render();
+}
+
+function showAllUsersList() {
+  state.searchKeyword = "";
+  state.showAllUsers = true;
+  render();
 }
 
 function handleCustomerLogin() {
@@ -703,21 +719,27 @@ function adminScreenHtml() {
         <section class="card">
           <h2 class="big-title">고객 검색 / 포인트 지급</h2>
 
-          <div class="form-group">
-            <input
-              type="text"
-              value="${escapeHtml(state.searchKeyword)}"
-              oninput="updateSearchKeyword(this.value)"
-              placeholder="팀명 또는 전화번호 검색"
-            />
-          </div>
+<div class="form-group">
+  <input
+    type="text"
+    value="${escapeHtml(state.searchKeyword)}"
+    oninput="updateSearchKeyword(this.value)"
+    placeholder="팀명 또는 전화번호 검색"
+  />
+</div>
 
-          <div class="user-list">
-            ${
-              users.length === 0
-                ? `<div class="empty-text">검색 결과가 없습니다.</div>`
-                : users
-                    .map(
+<div class="point-row" style="margin-bottom:12px;">
+  <button class="btn btn-tab" onclick="showAllUsersList()">고객전체보기</button>
+</div>
+
+<div class="user-list">
+  ${
+    !state.searchKeyword.trim() && !state.showAllUsers
+      ? `<div class="empty-text">검색어를 입력하거나 고객전체보기를 눌러주세요.</div>`
+      : users.length === 0
+        ? `<div class="empty-text">검색 결과가 없습니다.</div>`
+        : users
+            .map(
                       (user) => `
                           <div class="user-item">
                             <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
@@ -867,6 +889,7 @@ window.giveBoardgamePoint = giveBoardgamePoint;
 window.removeFromQueue = removeFromQueue;
 window.resetAll = resetAll;
 window.onlyNumber = onlyNumber;
+window.showAllUsersList = showAllUsersList;
 
 setInterval(() => {
   if (state.screen === "pc" || state.screen === "customer" || state.screen === "admin") {
