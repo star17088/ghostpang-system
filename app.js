@@ -792,20 +792,15 @@ function renderHeader() {
       </div>
 
 <div class="top-tabs">
-  <button class="btn ${state.screen === "customer" ? "btn-orange" : "btn-tab"}" onclick="setScreen('customer')">고객용 화면</button>
-  
-  <button class="btn ${state.screen === "pc" ? "btn-orange" : "btn-tab"}" onclick="setScreen('pc')">PC용 화면</button>
-
-  ${
-    state.screen === "admin"
-      ? `<button class="btn btn-orange" onclick="setScreen('admin')">관리자용 화면</button>`
-      : ``
-  }
+  <button ...>고객용 화면</button>
+  <button ...>PC용 화면</button>
+  <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
 </div>
 
 function renderScreen() {
   if (state.screen === "pc") return pcScreenHtml();
   if (state.screen === "admin") return adminScreenHtml();
+  if (state.screen === "guide") return guideScreenHtml();
   return customerScreenHtml();
 }
 
@@ -816,6 +811,23 @@ function render() {
       <div class="container">
         ${renderHeader()}
         ${renderScreen()}
+      </div>
+    </div>
+  `;
+}
+
+function guideScreenHtml() {
+  return `
+    <div class="guide-wrap">
+      <h2 class="big-title">게임 방법 안내</h2>
+
+      <div style="margin-top:20px;">
+<iframe 
+  width="100%" 
+  height="600" 
+  src="https://www.youtube.com/embed/Nar0Uy905iQ?autoplay=1&mute=1&loop=1&playlist=Nar0Uy905iQ"
+  allow="autoplay"
+></iframe>
       </div>
     </div>
   `;
