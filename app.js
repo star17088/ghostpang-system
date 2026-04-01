@@ -791,14 +791,17 @@ function renderHeader() {
         
       </div>
 
-      <div class="top-tabs">
-        <button class="btn ${state.screen === "customer" ? "btn-orange" : "btn-tab"}" onclick="setScreen('customer')">고객용 화면</button>
-        <button class="btn ${state.screen === "pc" ? "btn-orange" : "btn-tab"}" onclick="setScreen('pc')">PC용 화면</button>
-        <button class="btn ${state.screen === "admin" ? "btn-orange" : "btn-tab"}" onclick="setScreen('admin')">관리자용 화면</button>
-      </div>
-    </header>
-  `;
-}
+<div class="top-tabs">
+  <button class="btn ${state.screen === "customer" ? "btn-orange" : "btn-tab"}" onclick="setScreen('customer')">고객용 화면</button>
+  
+  <button class="btn ${state.screen === "pc" ? "btn-orange" : "btn-tab"}" onclick="setScreen('pc')">PC용 화면</button>
+
+  ${
+    state.screen === "admin"
+      ? `<button class="btn btn-orange" onclick="setScreen('admin')">관리자용 화면</button>`
+      : ``
+  }
+</div>
 
 function renderScreen() {
   if (state.screen === "pc") return pcScreenHtml();
