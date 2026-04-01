@@ -798,6 +798,11 @@ function adminScreenHtml() {
   ${adminQueueCardHtml("boardgame", "보드게임 사용자")}
 </div>
 
+</div>
+</div>
+`;
+}
+
 function renderHeader() {
   return `
     <header class="top-header">
