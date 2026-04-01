@@ -830,7 +830,7 @@ function guideScreenHtml() {
         <iframe 
           width="100%" 
           height="600" 
-          src="https://www.youtube.com/embed/Nar0Uy9O5iQ?autoplay=1&mute=1&loop=1&playlist=Nar0Uy9O5iQ"
+          src="https://www.youtube.com/embed/Nar0Uy9O5iQ?autoplay=1&mute=0&loop=1&playlist=Nar0Uy9O5iQ"
           allow="autoplay; encrypted-media"
           referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen
