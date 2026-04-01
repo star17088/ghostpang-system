@@ -216,7 +216,7 @@ function handleCustomerLogin() {
     points: 0,
     boardgamePoint: 0,
     boardgameJoinedAt: "",
-    createdAt: nowText(),
+    createdAt: Date.now(),
   };
   state.data.users.push(user);
 }
