@@ -844,8 +844,10 @@ function renderScreen() {
 function cleanupOldUsers() {
   const now = Date.now();
 
-  state.data.users = state.data.users.filter(u => {
-    return now - u.createdAt < 1000 * 60 * 60 * 6;
+  state.data.users = state.data.users.filter((u) => {
+    const created = new Date(u.createdAt).getTime();
+    if (Number.isNaN(created)) return true;
+    return now - created < 1000 * 60 * 60 * 6;
   });
 }
 
