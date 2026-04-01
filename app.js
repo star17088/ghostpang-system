@@ -106,15 +106,8 @@ function getNowMinute() {
   return Math.floor(Date.now() / 60000);
 }
 
-function getRemainingMinutes(queueKey, index) {
-  if (!["big", "small1", "small2"].includes(queueKey)) return null;
-
-  const startedAt = state.data.queueTimers?.[queueKey];
-  if (!startedAt) return (index + 1) * 16;
-
-  const passed = Math.max(0, getNowMinute() - startedAt);
-  const total = (index + 1) * 16;
-  return Math.max(0, total - passed);
+function getRemainingMinutes(q) {
+  return Math.max(0, q.startAt + 16 - getNowMinute());
 }
 
 function getCurrentUser() {
