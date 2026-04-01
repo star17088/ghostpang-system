@@ -151,9 +151,22 @@ function getFilteredUsers() {
 }
 
 function setScreen(screen) {
-  state.screen = screen;
-  render();
+  location.hash = screen;
 }
+
+function syncScreenWithHash() {
+  const hash = location.hash.replace("#/", "");
+  if (["customer", "pc", "admin"].includes(hash)) {
+    state.screen = hash;
+  } else {
+    state.screen = "customer";
+  }
+}
+
+window.addEventListener("hashchange", () => {
+  syncScreenWithHash();
+  render();
+});
 
 function setPcTab(tab) {
   state.pcTab = tab;
@@ -829,3 +842,4 @@ setInterval(() => {
   }
 }, 60000);
 loadData();
+syncScreenWithHash();
