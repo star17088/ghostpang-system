@@ -10,9 +10,7 @@ const ROOM_OPTIONS = [
 const initialData = {
   users: [],
   queues: {
-    big: [
-      { userId: "A", startAt: 123 }
-    ],
+    big: [],
     small1: [],
     small2: [],
     boardgame: [],
@@ -106,8 +104,8 @@ function getNowMinute() {
   return Math.floor(Date.now() / 60000);
 }
 
-function getRemainingMinutes(q) {
-  return Math.max(0, q.startAt + 16 - getNowMinute());
+function getRemainingMinutes(queueItem) {
+  return Math.max(0, queueItem.startAt + 16 - getNowMinute());
 }
 
 function getCurrentUser() {
@@ -120,7 +118,10 @@ function getUserById(id) {
 
 function getQueueUsers(queueKey) {
   return state.data.queues[queueKey]
-    .map((q) => getUserById(q.userId))
+    .map((q) => {
+      if (typeof q === "string") return getUserById(q);
+      return getUserById(q.userId);
+    })
     .filter(Boolean);
 }
 
@@ -347,10 +348,10 @@ function deleteUser(userId) {
 
   state.data.users = state.data.users.filter((u) => u.id !== userId);
 
-  state.data.queues.big = state.data.queues.big.filter((id) => id !== userId);
-  state.data.queues.small1 = state.data.queues.small1.filter((id) => id !== userId);
-  state.data.queues.small2 = state.data.queues.small2.filter((id) => id !== userId);
-  state.data.queues.boardgame = state.data.queues.boardgame.filter((id) => id !== userId);
+state.data.queues.big = state.data.queues.big.filter((q) => q.userId !== userId);
+state.data.queues.small1 = state.data.queues.small1.filter((q) => q.userId !== userId);
+state.data.queues.small2 = state.data.queues.small2.filter((q) => q.userId !== userId);
+state.data.queues.boardgame = state.data.queues.boardgame.filter((id) => id !== userId);
 
   if (state.currentUserId === userId) {
     state.currentUserId = null;
@@ -384,13 +385,17 @@ function giveBoardgamePoint(userId) {
 function removeFromQueue(queueKey, userId) {
   const queue = state.data.queues[queueKey];
 
-  const index = queue.findIndex((q) => q.userId === userId);
+  const index = queue.findIndex((q) =>
+    typeof q === "string" ? q === userId : q.userId === userId
+  );
   if (index === -1) return;
 
   queue.splice(index, 1);
 
-  for (let i = index; i < queue.length; i++) {
-    queue[i].startAt -= 16;
+  if (queueKey !== "boardgame") {
+    for (let i = index; i < queue.length; i++) {
+      queue[i].startAt -= 16;
+    }
   }
 
   if (queueKey === "boardgame") {
@@ -451,7 +456,7 @@ function roomCardHtml(room) {
                       <div class="pc-rank">${index + 1}순위</div>
                       <div class="pc-team-wrap">
                         <div class="pc-team">${escapeHtml(user.teamName)}</div>
-                        <div class="pc-wait">${getRemainingMinutes(room.key, index)}분</div>
+                        <div class="pc-wait">${getRemainingMinutes(state.data.queues[room.key][index])}분</div>
                       </div>
                     </div>
                   `
@@ -641,7 +646,7 @@ ${
                 <div class="rank">${index + 1}순위</div>
                 <div class="team-wrap">
                   <div class="team">${escapeHtml(user.teamName)}</div>
-                  <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
+                  <div class="wait-time">${getRemainingMinutes(state.data.queues[room.key][index])}분</div>
                 </div>
               </div>
             `
@@ -827,6 +832,13 @@ function renderHeader() {
 
 
   
+function renderScreen() {
+  if (state.screen === "customer") return customerScreenHtml();
+  if (state.screen === "pc") return pcScreenHtml();
+  if (state.screen === "admin") return adminScreenHtml();
+  if (state.screen === "guide") return guideScreenHtml();
+  return customerScreenHtml();
+}
 
 function render() {
   const app = document.getElementById("app");
