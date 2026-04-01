@@ -827,12 +827,14 @@ function guideScreenHtml() {
       <h2 class="big-title">게임 방법 안내</h2>
 
       <div style="margin-top:20px;">
-<iframe 
-  width="100%" 
-  height="600" 
-  src="https://www.youtube.com/embed/Nar0Uy905iQ?autoplay=1&mute=1&loop=1&playlist=Nar0Uy905iQ"
-  allow="autoplay"
-></iframe>
+        <iframe 
+          width="100%" 
+          height="600" 
+          src="https://www.youtube.com/embed/Nar0Uy9O5iQ?autoplay=1&mute=1&loop=1&playlist=Nar0Uy9O5iQ"
+          allow="autoplay; encrypted-media"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
       </div>
     </div>
   `;
