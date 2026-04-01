@@ -10,7 +10,9 @@ const ROOM_OPTIONS = [
 const initialData = {
   users: [],
   queues: {
-    big: [],
+    big: [
+      { userId: "A", startAt: 123 }
+    ],
     small1: [],
     small2: [],
     boardgame: [],
@@ -130,7 +132,7 @@ function getUserById(id) {
 
 function getQueueUsers(queueKey) {
   return state.data.queues[queueKey]
-    .map((id) => getUserById(id))
+    .map((q) => getUserById(q.userId))
     .filter(Boolean);
 }
 
@@ -274,7 +276,7 @@ function logoutCustomer() {
 }
 
 function isAlreadyInQueue(queueKey, userId) {
-  return state.data.queues[queueKey].includes(userId);
+  return state.data.queues[queueKey].some(q => q.userId === userId);
 }
 
 function handleReserve(queueKey) {
@@ -299,18 +301,27 @@ function handleReserve(queueKey) {
     return;
   }
 
-currentUser.points = (currentUser.points || 0) - 1;
+  currentUser.points = (currentUser.points || 0) - 1;
 
-const wasEmpty = state.data.queues[queueKey].length === 0;
-state.data.queues[queueKey].push(currentUser.id);
+  const queue = state.data.queues[queueKey];
 
-if (["big", "small1", "small2"].includes(queueKey) && wasEmpty) {
-  state.data.queueTimers[queueKey] = getNowMinute();
+  let startAt;
+
+  if (queue.length === 0) {
+    startAt = getNowMinute();
+  } else {
+    const last = queue[queue.length - 1];
+    startAt = last.startAt + 16;
+  }
+
+  queue.push({
+    userId: currentUser.id,
+    startAt
+  });
+
+  saveData();
+  render();
 }
-
-saveData();
-render();
-}  
 
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
@@ -387,7 +398,6 @@ function removeFromQueue(queueKey, userId) {
     state.data.queueTimers = { big: null, small1: null, small2: null };
   }
 
-  state.data.queues[queueKey] = state.data.queues[queueKey].filter((id) => id !== userId);
 
   if (queueKey === "boardgame") {
     const user = getUserById(userId);
