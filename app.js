@@ -151,12 +151,12 @@ function getFilteredUsers() {
 }
 
 function setScreen(screen) {
-  location.hash = screen;
+  location.hash = "/" + screen;
 }
 
 function syncScreenWithHash() {
   const hash = location.hash.replace("#/", "");
-  if (["customer", "pc", "admin"].includes(hash)) {
+  if (["customer", "pc", "admin", "guide"].includes(hash)) {
     state.screen = hash;
   } else {
     state.screen = "customer";
