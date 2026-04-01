@@ -790,16 +790,20 @@ function renderHeader() {
         <p> (무료로 입장한 미취학 아동은 인원수에 포함되지 않습니다) </p>
       </div>
 
-      <div class="top-tabs">
-  <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
+<div class="top-tabs">
 
   ${
     state.screen === "admin"
-      ? `<button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>`
-      : ``
+      ? `
+        <button class="btn btn-tab" onclick="setScreen('admin')">관리자 화면</button>
+        <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
+      `
+      : `
+        <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
+        <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
+      `
   }
 
-  <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
 </div>
 </header>
 `;
