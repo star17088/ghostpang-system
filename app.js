@@ -791,12 +791,18 @@ function renderHeader() {
       </div>
 
       <div class="top-tabs">
-        <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
-        <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
-        <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
-      </div>
-    </header>
-  `;
+  <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
+
+  ${
+    state.screen === "admin"
+      ? `<button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>`
+      : ``
+  }
+
+  <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
+</div>
+</header>
+`;
 }
 
 function renderScreen() {
