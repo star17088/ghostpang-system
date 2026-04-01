@@ -808,22 +808,25 @@ function renderHeader() {
     <header class="top-header">
       <div>
         <h1>고스트팡을 찾아주셔서 감사합니다.</h1>
-        <p> 해당 인원 수에 맞게 방을 선택해 주세요</p>
-        <p> (무료로 입장한 미취학 아동은 인원수에 포함되지 않습니다) </p>
+        <p>해당 인원 수에 맞게 방을 선택해 주세요</p>
+        <p>(무료로 입장한 미취학 아동은 인원수에 포함되지 않습니다)</p>
       </div>
 
-<div class="top-tabs">
-
-${
-  state.screen === "admin" || state.screen === "pc"
-    ? `
-      <button class="btn btn-tab" onclick="setScreen('admin')">관리자 화면</button>
-      <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
-    `
-    : `
-      <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
-      <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
-    `
+      <div class="top-tabs">
+        ${
+          state.screen === "admin" || state.screen === "pc"
+            ? `
+              <button class="btn btn-tab" onclick="setScreen('admin')">관리자 화면</button>
+              <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
+            `
+            : `
+              <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
+              <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
+            `
+        }
+      </div>
+    </header>
+  `;
 }
 
 
