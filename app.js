@@ -183,7 +183,6 @@ function updateSearchKeyword(value) {
   if (String(value).trim()) {
     state.showAllUsers = false;
   }
-  render();
 }
 
 function showAllUsersList() {
@@ -725,11 +724,13 @@ function adminScreenHtml() {
     type="text"
     value="${escapeHtml(state.searchKeyword)}"
     oninput="updateSearchKeyword(this.value)"
+    onkeydown="if(event.key==='Enter'){render();}"
     placeholder="팀명 또는 전화번호 검색"
   />
 </div>
 
 <div class="point-row" style="margin-bottom:12px;">
+  <button class="btn btn-orange" onclick="render()">검색</button>
   <button class="btn btn-tab" onclick="showAllUsersList()">고객전체보기</button>
 </div>
 
