@@ -614,3 +614,13 @@ input::placeholder {
   font-size: 14px;
   padding: 10px 6px;
 }
+
+.admin-room-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.admin-board-section {
+  margin-top: 16px;
+}
