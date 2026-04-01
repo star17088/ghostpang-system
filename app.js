@@ -814,28 +814,16 @@ function renderHeader() {
 
 <div class="top-tabs">
 
-  ${
-    state.screen === "admin"
-      ? `
-        <button class="btn btn-tab" onclick="setScreen('admin')">관리자 화면</button>
-        <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
-      `
-      : `
-        <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
-        <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
-      `
-  }
-
-</div>
-</header>
-`;
-}
-
-function renderScreen() {
-  if (state.screen === "pc") return pcScreenHtml();
-  if (state.screen === "admin") return adminScreenHtml();
-  if (state.screen === "guide") return guideScreenHtml();
-  return customerScreenHtml();
+${
+  state.screen === "admin" || state.screen === "pc"
+    ? `
+      <button class="btn btn-tab" onclick="setScreen('admin')">관리자 화면</button>
+      <button class="btn btn-tab" onclick="setScreen('pc')">PC용 화면</button>
+    `
+    : `
+      <button class="btn btn-tab" onclick="setScreen('customer')">고객용 화면</button>
+      <button class="btn btn-tab" onclick="setScreen('guide')">게임방법보기</button>
+    `
 }
 
 
