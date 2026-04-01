@@ -17,11 +17,6 @@ const initialData = {
     small2: [],
     boardgame: [],
   },
-  queueTimers: {
-    big: null,
-    small1: null,
-    small2: null,
-  },
 };
 
 let state = {
@@ -394,24 +389,22 @@ function giveBoardgamePoint(userId) {
 }
 
 function removeFromQueue(queueKey, userId) {
-  if (!state.data.queueTimers) {
-    state.data.queueTimers = { big: null, small1: null, small2: null };
-  }
+  const queue = state.data.queues[queueKey];
 
+  const index = queue.findIndex((q) => q.userId === userId);
+  if (index === -1) return;
+
+  queue.splice(index, 1);
+
+  for (let i = index; i < queue.length; i++) {
+    queue[i].startAt -= 16;
+  }
 
   if (queueKey === "boardgame") {
     const user = getUserById(userId);
     if (user) {
       user.boardgamePoint = 0;
       user.boardgameJoinedAt = "";
-    }
-  }
-
-  if (["big", "small1", "small2"].includes(queueKey)) {
-    if (state.data.queues[queueKey].length > 0) {
-      state.data.queueTimers[queueKey] = getNowMinute();
-    } else {
-      state.data.queueTimers[queueKey] = null;
     }
   }
 
