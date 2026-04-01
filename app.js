@@ -788,20 +788,15 @@ function adminScreenHtml() {
           </div>
         </section>
 
-        <div class="admin-card-stack">
-          ${adminQueueCardHtml("big", "큰방")}
-          ${adminQueueCardHtml("small1", "작은방1")}
-          ${adminQueueCardHtml("small2", "작은방2")}
-          ${adminQueueCardHtml("boardgame", "보드게임 사용자")}
-        </div>
+<div class="admin-room-grid">
+  ${adminQueueCardHtml("big", "큰방")}
+  ${adminQueueCardHtml("small1", "작은방1")}
+  ${adminQueueCardHtml("small2", "작은방2")}
+</div>
 
-        <section class="card reset-card">
-          <button class="btn btn-gray full" onclick="resetAll()">전체 초기화</button>
-        </section>
-      </div>
-    </div>
-  `;
-}
+<div class="admin-board-section">
+  ${adminQueueCardHtml("boardgame", "보드게임 사용자")}
+</div>
 
 function renderHeader() {
   return `
