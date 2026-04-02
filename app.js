@@ -700,7 +700,9 @@ ${
 function adminScreenHtml() {
 const users = state.searchKeyword.trim()
   ? getFilteredUsers()
-  : getUsersNeverReceivedPoints();
+  : state.showAllUsers
+    ? state.data.users
+    : getUsersNeverReceivedPoints();
 
   if (!state.adminLoggedIn) {
     return `
