@@ -105,7 +105,15 @@ function getNowMinute() {
 }
 
 function getRemainingMinutes(queueKey, index) {
-  return Math.max(0, (index + 1) * 16);
+  const queue = state.data.queues?.[queueKey] || [];
+  const item = queue[index];
+
+  if (!item || typeof item === "string" || typeof item.startAt !== "number") {
+    return Math.max(0, (index + 1) * 16);
+  }
+
+  const nowMinute = getNowMinute();
+  return Math.max(0, item.startAt - nowMinute + 16);
 }
 
 function getCurrentUser() {
