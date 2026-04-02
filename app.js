@@ -50,22 +50,6 @@ async function saveData() {
   }
 }
 
-async function loadData() {
-  const snap = await getDoc(DATA_DOC);
-
-  if (snap.exists()) {
-    state.data = snap.data();
-
-    if (!state.data.queueTimers) {
-      state.data.queueTimers = { big: null, small1: null, small2: null };
-    }
-  } else {
-    await setDoc(DATA_DOC, state.data);
-  }
-
-  render();
-}
-
 async function fixQueueDataOnce() {
   const roomKeys = ["big", "small1", "small2"];
   let changed = false;
@@ -73,14 +57,30 @@ async function fixQueueDataOnce() {
   roomKeys.forEach((key) => {
     const queue = state.data.queues?.[key] || [];
 
-    state.data.queues[key] = queue.map((item) => {
-      if (typeof item === "string") {
-        changed = true;
-        return {
-          userId: item,
-          startAt: getNowMinute(),
-        };
-      }
+    state.data.queues[key] = queue
+      .map((item, index) => {
+        if (typeof item === "string") {
+          changed = true;
+          return {
+            userId: item,
+            startAt: getNowMinute() + index * 16,
+          };
+        }
+
+        if (!item || typeof item.userId !== "string") {
+          changed = true;
+          return null;
+        }
+
+        return item;
+      })
+      .filter(Boolean);
+  });
+
+  if (changed) {
+    await saveData();
+  }
+}
 
       if (!item || typeof item.userId !== "string") {
         changed = true;
@@ -907,9 +907,9 @@ function cleanupOldUsers() {
 }
 
 function render() {
-  if (!state.showAllUsers) {
-    cleanupOldUsers();
-  }
+// if (!state.showAllUsers) {
+//   cleanupOldUsers();
+// }
 
   const app = document.getElementById("app");
   if (!app) {
