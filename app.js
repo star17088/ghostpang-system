@@ -767,7 +767,7 @@ const users = state.searchKeyword.trim()
           </div>
 
           <div class="point-row" style="margin-bottom:12px;">
-            <button class="btn btn-orange" onclick="render()">검색</button>
+            <button class="btn btn-orange" onclick="runAdminSearch()">검색</button>
             <button class="btn btn-tab" onclick="showAllUsersList()">고객전체보기</button>
           </div>
 
@@ -941,6 +941,7 @@ function runAdminSearch() {
   render();
 }
 
+window.runAdminSearch = runAdminSearch;
 window.setScreen = setScreen;
 window.setPcTab = setPcTab;
 window.updateCustomerForm = updateCustomerForm;
