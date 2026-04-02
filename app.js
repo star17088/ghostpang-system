@@ -170,11 +170,17 @@ function getFilteredUsers() {
   }
 
   const numberKeyword = onlyNumber(keyword);
+  const hasTextKeyword = keyword.length > 0;
+  const hasNumberKeyword = numberKeyword.length > 0;
+
   return state.data.users.filter((u) => {
-    return (
-      String(u.teamName || "").includes(keyword) ||
-      onlyNumber(u.phone).includes(numberKeyword)
-    );
+    const teamName = String(u.teamName || "").trim();
+    const phone = onlyNumber(u.phone);
+
+    const matchTeamName = hasTextKeyword && teamName.includes(keyword);
+    const matchPhone = hasNumberKeyword && phone.includes(numberKeyword);
+
+    return matchTeamName || matchPhone;
   });
 }
 
