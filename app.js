@@ -104,8 +104,8 @@ function getNowMinute() {
   return Math.floor(Date.now() / 60000);
 }
 
-function getRemainingMinutes(queueItem) {
-  return Math.max(0, queueItem.startAt + 16 - getNowMinute());
+function getRemainingMinutes(queueKey, index) {
+  return Math.max(0, (index + 1) * 16);
 }
 
 function getCurrentUser() {
@@ -496,7 +496,7 @@ function roomCardHtml(room) {
                       <div class="pc-rank">${index + 1}순위</div>
                       <div class="pc-team-wrap">
                         <div class="pc-team">${escapeHtml(user.teamName)}</div>
-                        <div class="pc-wait">${getRemainingMinutes(state.data.queues[room.key][index])}분</div>
+                        <div class="pc-wait">${getRemainingMinutes(room.key, index)}분</div>
                       </div>
                     </div>
                   `
@@ -686,7 +686,7 @@ ${
                 <div class="rank">${index + 1}순위</div>
                 <div class="team-wrap">
                   <div class="team">${escapeHtml(user.teamName)}</div>
-                  <div class="wait-time">${getRemainingMinutes(state.data.queues[room.key][index])}분</div>
+                  <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
                 </div>
               </div>
             `
