@@ -194,7 +194,6 @@ function updateAdminPassword(value) {
 function updateSearchKeyword(value) {
   state.searchKeyword = value;
   state.showAllUsers = false;
-  render();
 }
 
 function showAllUsersList() {
@@ -941,7 +940,7 @@ setInterval(() => {
   if (state.screen === "pc" || state.screen === "customer" || state.screen === "admin") {
     render();
   }
-}, 60000);
+}, 1000);
 loadData();
 syncScreenWithHash();
 window.showAllUsersList = showAllUsersList;
