@@ -117,7 +117,8 @@ function getUserById(id) {
 }
 
 function getQueueUsers(queueKey) {
-  return state.data.queues[queueKey]
+  const queue = state.data.queues?.[queueKey] || [];
+  return queue
     .map((q) => {
       if (typeof q === "string") return getUserById(q);
       return getUserById(q.userId);
@@ -910,6 +911,11 @@ function cleanupOldUsers() {
 function render() {
   cleanupOldUsers();
   const app = document.getElementById("app");
+  if (!app) {
+    console.error("app 요소를 찾을 수 없습니다.");
+    return;
+  }
+
   app.innerHTML = `
     <div class="page">
       <div class="container">
