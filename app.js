@@ -935,6 +935,12 @@ function guideScreenHtml() {
     </div>
   `;
 }
+
+function runAdminSearch() {
+  state.showAllUsers = false;
+  render();
+}
+
 window.setScreen = setScreen;
 window.setPcTab = setPcTab;
 window.updateCustomerForm = updateCustomerForm;
