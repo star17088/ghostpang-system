@@ -152,10 +152,6 @@ function getUsersNeverReceivedPoints() {
   return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
 }
 
-function getUsersNeverReceivedPoints() {
-  return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
-}
-
 function setScreen(screen) {
   location.hash = "/" + screen;
 }
@@ -210,25 +206,26 @@ function handleCustomerLogin() {
   }
 
   let user = state.data.users.find(
-  (u) =>
-    onlyNumber(u.phone) === phone &&
-    String(u.teamName || "").trim() === teamName
+    (u) =>
+      onlyNumber(u.phone) === phone &&
+      String(u.teamName || "").trim() === teamName
   );
 
   if (!user) {
-user = {
-  id: makeId(),
-  teamName,
-  phone,
-  people: "",
-  tableNo: "",
-  points: 0,
-  totalPointsReceived: 0,
-  boardgamePoint: 0,
-  boardgameJoinedAt: "",
-  createdAt: Date.now(),
-};
-  
+    user = {
+      id: makeId(),
+      teamName,
+      phone,
+      people: "",
+      tableNo: "",
+      points: 0,
+      totalPointsReceived: 0,
+      boardgamePoint: 0,
+      boardgameJoinedAt: "",
+      createdAt: Date.now(),
+    };
+    state.data.users.push(user);
+  }
 
   state.currentUserId = user.id;
   state.customerForm.people = user.people || "";
@@ -268,45 +265,6 @@ function logoutCustomer() {
     people: "",
     tableNo: "",
   };
-  render();
-}
-
-function handleReserve(queueKey) {
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    alert("먼저 로그인해주세요.");
-    return;
-  }
-
-  if (!currentUser.people || !currentUser.tableNo) {
-    alert("인원수와 테이블 번호를 먼저 저장해주세요.");
-    return;
-  }
-
-  if ((currentUser.points || 0) < 1) {
-    alert("예약 가능한 포인트가 없습니다.");
-    return;
-  }
-
-  currentUser.points = (currentUser.points || 0) - 1;
-
-  const queue = state.data.queues[queueKey];
-
-  let startAt;
-
-  if (queue.length === 0) {
-    startAt = getNowMinute();
-  } else {
-    const last = queue[queue.length - 1];
-    startAt = last.startAt + 16;
-  }
-
-  queue.push({
-    userId: currentUser.id,
-    startAt
-  });
-
-  saveData();
   render();
 }
 
