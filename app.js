@@ -808,12 +808,6 @@ function adminScreenHtml() {
 
                       <div class="point-row">
                         ${[1, 2, 3, 4, 5].map(n => `
-                          <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
-                        `).join("")}
-                      </div>
-
-                      <div class="point-row">
-                        ${[1, 2, 3, 4, 5].map(n => `
                           <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
                         `).join("")}
                       </div>
@@ -848,6 +842,14 @@ function adminScreenHtml() {
       </div>
     </div>
   `;
+}
+
+function isAlreadyInQueue(queueKey, userId) {
+  const queue = state.data.queues[queueKey] || [];
+  return queue.some((q) => {
+    if (typeof q === "string") return q === userId;
+    return q.userId === userId;
+  });
 }
 
 function renderHeader() {
