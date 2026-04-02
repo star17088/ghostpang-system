@@ -82,20 +82,6 @@ async function fixQueueDataOnce() {
   }
 }
 
-      if (!item || typeof item.userId !== "string") {
-        changed = true;
-        return null;
-      }
-
-      return item;
-    }).filter(Boolean);
-  });
-
-  if (changed) {
-    await saveData();
-  }
-}
-
 function onlyNumber(value) {
   return String(value || "").replace(/[^0-9]/g, "");
 }
