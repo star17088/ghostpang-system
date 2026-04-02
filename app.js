@@ -956,9 +956,41 @@ window.showAllUsersList = showAllUsersList;
 window.updateUserTable = updateUserTable;
 
 setInterval(() => {
-  if (state.screen === "pc" || state.screen === "customer") {
+  const now = Date.now();
+
+  if (state.screen === "pc") {
     render();
+    return;
   }
+
+  if (state.screen === "customer" && state.currentUserId) {
+    if (!state.lastCustomerRenderAt) {
+      state.lastCustomerRenderAt = now;
+      render();
+      return;
+    }
+
+    if (now - state.lastCustomerRenderAt >= 10000) {
+      state.lastCustomerRenderAt = now;
+      render();
+    }
+
+    return;
+  }
+
+  if (state.screen === "admin") {
+    if (!state.lastAdminRenderAt) {
+      state.lastAdminRenderAt = now;
+      render();
+      return;
+    }
+
+    if (now - state.lastAdminRenderAt >= 30000) {
+      state.lastAdminRenderAt = now;
+      render();
+    }
+  }
+
 }, 1000);
 
 async function loadData() {
