@@ -131,11 +131,11 @@ function getRemainingMinutes(queueKey, index) {
   const item = queue[index];
 
   if (!item || typeof item === "string" || typeof item.startAt !== "number") {
-    return Math.max(0, (index + 1) * 16);
+    return (index + 1) * 16;
   }
 
   const nowMinute = getNowMinute();
-  return Math.max(0, item.startAt - nowMinute + 16);
+  return Math.max(0, item.startAt - nowMinute);
 }
 
 function getCurrentUser() {
@@ -321,19 +321,11 @@ function handleReserve(queueKey) {
   currentUser.points = (currentUser.points || 0) - 1;
 
   const queue = state.data.queues[queueKey];
-
-  let startAt;
-
-  if (queue.length === 0) {
-    startAt = getNowMinute();
-  } else {
-    const last = queue[queue.length - 1];
-    startAt = last.startAt + 16;
-  }
+  const nowMinute = getNowMinute();
 
   queue.push({
     userId: currentUser.id,
-    startAt
+    startAt: nowMinute + (queue.length + 1) * 16
   });
 
   saveData();
@@ -425,9 +417,13 @@ function removeFromQueue(queueKey, userId) {
   queue.splice(index, 1);
 
   if (queueKey !== "boardgame") {
-    for (let i = index; i < queue.length; i++) {
-      queue[i].startAt -= 16;
-    }
+    const nowMinute = getNowMinute();
+
+    queue.forEach((item, i) => {
+      if (typeof item !== "string") {
+        item.startAt = nowMinute + (i + 1) * 16;
+      }
+    });
   }
 
   if (queueKey === "boardgame") {
