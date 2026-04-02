@@ -37,7 +37,13 @@ let state = {
 onSnapshot(DATA_DOC, (snap) => {
   if (snap.exists()) {
     state.data = snap.data();
-    render();
+
+    const isCustomerLoginTyping =
+      state.screen === "customer" && !state.currentUserId;
+
+    if (!isCustomerLoginTyping) {
+      render();
+    }
   }
 });
 
