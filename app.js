@@ -953,14 +953,23 @@ window.showAllUsersList = showAllUsersList;
 window.updateUserTable = updateUserTable;
 
 setInterval(() => {
-  if (state.screen === "pc" || state.screen === "customer" || state.screen === "admin") {
+  if (state.screen === "pc" || state.screen === "customer") {
     render();
   }
 }, 1000);
+
+async function loadData() {
+  const snap = await getDoc(DATA_DOC);
+
+  if (snap.exists()) {
+    state.data = snap.data();
+  } else {
+    await setDoc(DATA_DOC, state.data);
+  }
+}
 
 loadData().then(async () => {
   await fixQueueDataOnce();
   syncScreenWithHash();
   render();
 });
-
