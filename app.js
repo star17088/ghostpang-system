@@ -152,6 +152,10 @@ function getUsersNeverReceivedPoints() {
   return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
 }
 
+function getUsersNeverReceivedPoints() {
+  return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
+}
+
 function setScreen(screen) {
   location.hash = "/" + screen;
 }
@@ -212,20 +216,18 @@ function handleCustomerLogin() {
   );
 
   if (!user) {
-  user = {
-    id: makeId(),
-    teamName,
-    phone,
-    people: "",
-    tableNo: "",
-    points: 0,
-    totalPointsReceived: 0,
-    boardgamePoint: 0,
-    boardgameJoinedAt: "",
-    createdAt: Date.now(),
-  };
-  state.data.users.push(user);
-}
+user = {
+  id: makeId(),
+  teamName,
+  phone,
+  people: "",
+  tableNo: "",
+  points: 0,
+  totalPointsReceived: 0,
+  boardgamePoint: 0,
+  boardgameJoinedAt: "",
+  createdAt: Date.now(),
+};
   
 
   state.currentUserId = user.id;
@@ -738,9 +740,9 @@ ${
 }
 
 function adminScreenHtml() {
-  const users = state.searchKeyword.trim()
-    ? getFilteredUsers()
-    : getUsersNeverReceivedPoints();
+const users = state.searchKeyword.trim()
+  ? getFilteredUsers()
+  : getUsersNeverReceivedPoints();
 
   if (!state.adminLoggedIn) {
     return `
