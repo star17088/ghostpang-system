@@ -537,15 +537,21 @@ function adminQueueCardHtml(queueKey, title) {
                       </div>
 
                       ${
-                        !isBoardgame
-                          ? `<div class="queue-meta">
-                              <span>인원 ${escapeHtml(user.people || "-")}명</span>
-                              <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
-                            </div>`
-                          : `<div class="queue-meta">
-                              <span>로그인 시간 ${escapeHtml(user.boardgameJoinedAt || "-")}</span>
-                            </div>`
-                      }
+  !isBoardgame
+    ? `<div class="queue-meta">
+        <span>인원 ${escapeHtml(user.people || "-")}명</span>
+        <span>테이블</span>
+        <input
+          type="text"
+          value="${escapeHtml(user.tableNo || "")}"
+          onchange="updateUserTable('${user.id}', this.value)"
+          placeholder="테이블 번호"
+        />
+      </div>`
+    : `<div class="queue-meta">
+        <span>로그인 시간 ${escapeHtml(user.boardgameJoinedAt || "-")}</span>
+      </div>`
+}
 
                       <div class="admin-actions">
                         <button class="btn btn-red" onclick="removeFromQueue('${queueKey}', '${user.id}')">입장</button>
@@ -762,71 +768,61 @@ function adminScreenHtml() {
         <section class="card">
           <h2 class="big-title">고객 검색 / 포인트 지급</h2>
 
-<div class="form-group">
-  <input
-    type="text"
-    value="${escapeHtml(state.searchKeyword)}"
-    oninput="updateSearchKeyword(this.value)"
-    onkeydown="if(event.key==='Enter'){render();}"
-    placeholder="팀명 또는 전화번호 검색"
-  />
-</div>
-
-<div class="point-row" style="margin-bottom:12px;">
-  <button class="btn btn-orange" onclick="render()">검색</button>
-  <button class="btn btn-tab" onclick="showAllUsersList()">고객전체보기</button>
-</div>
-
-<div class="user-list">
-  ${
-    users.length === 0
-      ? `<div class="empty-text">${
-          state.searchKeyword.trim()
-            ? "검색 결과가 없습니다."
-            : "아직 포인트를 한 번도 받지 않은 고객이 없습니다."
-        }</div>`
-      : users.map((user) => `
-          <div class="user-item">
-            <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
-
-            <div class="user-item-top">
-              <div class="user-item-name">${escapeHtml(user.teamName)}</div>
-              <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
-            </div>
-
-            <div class="user-item-meta">
-              <span>인원 ${escapeHtml(user.people || "-")}명</span>
-              <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
-              <span>포인트 ${escapeHtml(user.points || 0)}개</span>
-            </div>
-
-            <div class="point-row">
-              ${[1,2,3,4,5].map(n => `
-                <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
-              `).join("")}
-            </div>
-
-            <div class="point-row">
-              ${[1,2,3,4,5].map(n => `
-                <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
-              `).join("")}
-            </div>
-
-            <div class="point-row">
-              <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
-            </div>
+          <div class="form-group">
+            <input
+              type="text"
+              value="${escapeHtml(state.searchKeyword)}"
+              oninput="updateSearchKeyword(this.value)"
+              onkeydown="if(event.key==='Enter'){render();}"
+              placeholder="팀명 또는 전화번호 검색"
+            />
           </div>
-        `).join("")
-  }
-</div>
 
-                          <div class="point-row">
-                              <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
-                          </div>
-                        </div>
-                      `
-                    )
-                    .join("")
+          <div class="point-row" style="margin-bottom:12px;">
+            <button class="btn btn-orange" onclick="render()">검색</button>
+            <button class="btn btn-tab" onclick="showAllUsersList()">고객전체보기</button>
+          </div>
+
+          <div class="user-list">
+            ${
+              users.length === 0
+                ? `<div class="empty-text">${
+                    state.searchKeyword.trim()
+                      ? "검색 결과가 없습니다."
+                      : "아직 포인트를 한 번도 받지 않은 고객이 없습니다."
+                  }</div>`
+                : users.map((user) => `
+                    <div class="user-item">
+                      <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
+
+                      <div class="user-item-top">
+                        <div class="user-item-name">${escapeHtml(user.teamName)}</div>
+                        <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
+                      </div>
+
+                      <div class="user-item-meta">
+                        <span>인원 ${escapeHtml(user.people || "-")}명</span>
+                        <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
+                        <span>포인트 ${escapeHtml(user.points || 0)}개</span>
+                      </div>
+
+                      <div class="point-row">
+                        ${[1, 2, 3, 4, 5].map(n => `
+                          <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
+                        `).join("")}
+                      </div>
+
+                      <div class="point-row">
+                        ${[1, 2, 3, 4, 5].map(n => `
+                          <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
+                        `).join("")}
+                      </div>
+
+                      <div class="point-row">
+                        <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
+                      </div>
+                    </div>
+                  `).join("")
             }
           </div>
         </section>
@@ -840,19 +836,18 @@ function adminScreenHtml() {
           </div>
         </section>
 
-<div class="admin-room-grid">
-  ${adminQueueCardHtml("big", "큰방")}
-  ${adminQueueCardHtml("small1", "작은방1")}
-  ${adminQueueCardHtml("small2", "작은방2")}
-</div>
+        <div class="admin-room-grid">
+          ${adminQueueCardHtml("big", "큰방")}
+          ${adminQueueCardHtml("small1", "작은방1")}
+          ${adminQueueCardHtml("small2", "작은방2")}
+        </div>
 
-<div class="admin-board-section">
-  ${adminQueueCardHtml("boardgame", "보드게임 사용자")}
-</div>
-
-</div>
-</div>
-`;
+        <div class="admin-board-section">
+          ${adminQueueCardHtml("boardgame", "보드게임 사용자")}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderHeader() {
@@ -879,6 +874,15 @@ function renderHeader() {
       </div>
     </header>
   `;
+}
+
+function updateUserTable(userId, value) {
+  const user = getUserById(userId);
+  if (!user) return;
+
+  user.tableNo = value;
+  saveData();
+  render();
 }
 
 
@@ -959,3 +963,5 @@ setInterval(() => {
 }, 60000);
 loadData();
 syncScreenWithHash();
+window.showAllUsersList = showAllUsersList;
+window.updateUserTable = updateUserTable;
