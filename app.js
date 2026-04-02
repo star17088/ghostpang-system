@@ -871,7 +871,10 @@ function cleanupOldUsers() {
 }
 
 function render() {
-  cleanupOldUsers();
+  if (!state.showAllUsers) {
+    cleanupOldUsers();
+  }
+
   const app = document.getElementById("app");
   if (!app) {
     console.error("app 요소를 찾을 수 없습니다.");
@@ -887,6 +890,7 @@ function render() {
     </div>
   `;
 }
+
 
 function guideScreenHtml() {
   return `
