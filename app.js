@@ -185,9 +185,8 @@ function updateAdminPassword(value) {
 
 function updateSearchKeyword(value) {
   state.searchKeyword = value;
-  if (String(value).trim()) {
-    state.showAllUsers = false;
-  }
+  state.showAllUsers = false;
+  render();
 }
 
 function showAllUsersList() {
