@@ -66,6 +66,36 @@ async function loadData() {
   render();
 }
 
+async function fixQueueDataOnce() {
+  const roomKeys = ["big", "small1", "small2"];
+  let changed = false;
+
+  roomKeys.forEach((key) => {
+    const queue = state.data.queues?.[key] || [];
+
+    state.data.queues[key] = queue.map((item) => {
+      if (typeof item === "string") {
+        changed = true;
+        return {
+          userId: item,
+          startAt: getNowMinute(),
+        };
+      }
+
+      if (!item || typeof item.userId !== "string") {
+        changed = true;
+        return null;
+      }
+
+      return item;
+    }).filter(Boolean);
+  });
+
+  if (changed) {
+    await saveData();
+  }
+}
+
 function onlyNumber(value) {
   return String(value || "").replace(/[^0-9]/g, "");
 }
@@ -916,7 +946,6 @@ function guideScreenHtml() {
     </div>
   `;
 }
-
 window.setScreen = setScreen;
 window.setPcTab = setPcTab;
 window.updateCustomerForm = updateCustomerForm;
@@ -935,13 +964,17 @@ window.removeFromQueue = removeFromQueue;
 window.resetAll = resetAll;
 window.onlyNumber = onlyNumber;
 window.showAllUsersList = showAllUsersList;
+window.updateUserTable = updateUserTable;
 
 setInterval(() => {
   if (state.screen === "pc" || state.screen === "customer" || state.screen === "admin") {
     render();
   }
 }, 1000);
-loadData();
-syncScreenWithHash();
-window.showAllUsersList = showAllUsersList;
-window.updateUserTable = updateUserTable;
+
+loadData().then(async () => {
+  await fixQueueDataOnce();
+  syncScreenWithHash();
+  render();
+});
+
