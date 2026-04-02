@@ -397,8 +397,11 @@ function giveBoardgamePoint(userId) {
   user.boardgamePoint = 1;
   user.boardgameJoinedAt = user.boardgameJoinedAt || nowText();
 
-  if (!state.data.queues.boardgame.includes(userId)) {
-    state.data.queues.boardgame.push(userId);
+  if (!isAlreadyInQueue("boardgame", userId)) {
+    state.data.queues.boardgame.push({
+      userId: userId,
+      startAt: getNowMinute()
+    });
   }
 
   saveData();
