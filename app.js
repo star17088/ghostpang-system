@@ -263,8 +263,43 @@ function logoutCustomer() {
   render();
 }
 
-function isAlreadyInQueue(queueKey, userId) {
-  return state.data.queues[queueKey].some(q => q.userId === userId);
+function handleReserve(queueKey) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert("먼저 로그인해주세요.");
+    return;
+  }
+
+  if (!currentUser.people || !currentUser.tableNo) {
+    alert("인원수와 테이블 번호를 먼저 저장해주세요.");
+    return;
+  }
+
+  if ((currentUser.points || 0) < 1) {
+    alert("예약 가능한 포인트가 없습니다.");
+    return;
+  }
+
+  currentUser.points = (currentUser.points || 0) - 1;
+
+  const queue = state.data.queues[queueKey];
+
+  let startAt;
+
+  if (queue.length === 0) {
+    startAt = getNowMinute();
+  } else {
+    const last = queue[queue.length - 1];
+    startAt = last.startAt + 16;
+  }
+
+  queue.push({
+    userId: currentUser.id,
+    startAt
+  });
+
+  saveData();
+  render();
 }
 
 function handleReserve(queueKey) {
