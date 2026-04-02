@@ -147,6 +147,10 @@ function getFilteredUsers() {
   });
 }
 
+function getUsersNeverReceivedPoints() {
+  return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
+}
+
 function setScreen(screen) {
   location.hash = "/" + screen;
 }
@@ -214,6 +218,7 @@ function handleCustomerLogin() {
     people: "",
     tableNo: "",
     points: 0,
+    totalPointsReceived: 0,
     boardgamePoint: 0,
     boardgameJoinedAt: "",
     createdAt: Date.now(),
@@ -360,6 +365,7 @@ function givePoints(userId, amount) {
   const user = getUserById(userId);
   if (!user) return;
   user.points = (user.points || 0) + amount;
+  user.totalPointsReceived = (user.totalPointsReceived || 0) + amount;
   saveData();
   render();
 }
@@ -725,7 +731,9 @@ ${
 }
 
 function adminScreenHtml() {
-  const users = getFilteredUsers();
+  const users = state.searchKeyword.trim()
+    ? getFilteredUsers()
+    : getUsersNeverReceivedPoints();
 
   if (!state.adminLoggedIn) {
     return `
@@ -771,39 +779,46 @@ function adminScreenHtml() {
 
 <div class="user-list">
   ${
-    !state.searchKeyword.trim() && !state.showAllUsers
-      ? `<div class="empty-text">검색어를 입력하거나 고객전체보기를 눌러주세요.</div>`
-      : users.length === 0
-        ? `<div class="empty-text">검색 결과가 없습니다.</div>`
-        : users
-            .map(
-                      (user) => `
-                          <div class="user-item">
-                            <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
+    users.length === 0
+      ? `<div class="empty-text">${
+          state.searchKeyword.trim()
+            ? "검색 결과가 없습니다."
+            : "아직 포인트를 한 번도 받지 않은 고객이 없습니다."
+        }</div>`
+      : users.map((user) => `
+          <div class="user-item">
+            <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
 
-                          <div class="user-item-top">
-                            <div class="user-item-name">${escapeHtml(user.teamName)}</div>
-                            <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
-                          </div>
+            <div class="user-item-top">
+              <div class="user-item-name">${escapeHtml(user.teamName)}</div>
+              <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
+            </div>
 
-                          <div class="user-item-meta">
-                            <span>인원 ${escapeHtml(user.people || "-")}명</span>
-                            <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
-                            <span>포인트 ${escapeHtml(user.points || 0)}개</span>
-                            <span>보드게임 ${escapeHtml(user.boardgamePoint || 0)}개</span>
-                          </div>
+            <div class="user-item-meta">
+              <span>인원 ${escapeHtml(user.people || "-")}명</span>
+              <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
+              <span>포인트 ${escapeHtml(user.points || 0)}개</span>
+            </div>
 
-                          <div class="point-row">
-                           ${[1,2,3,4,5].map(n => `
-                            <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
-                            `).join("")}
-                          </div>
+            <div class="point-row">
+              ${[1,2,3,4,5].map(n => `
+                <button class="btn btn-point-minus" onclick="subtractPoints('${user.id}', ${n})">-${n}</button>
+              `).join("")}
+            </div>
 
-                          <div class="point-row">
-                            ${[1,2,3,4,5].map(n => `
-                              <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
-                            `).join("")}
-                          </div>
+            <div class="point-row">
+              ${[1,2,3,4,5].map(n => `
+                <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
+              `).join("")}
+            </div>
+
+            <div class="point-row">
+              <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
+            </div>
+          </div>
+        `).join("")
+  }
+</div>
 
                           <div class="point-row">
                               <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
