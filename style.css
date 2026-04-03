@@ -188,6 +188,9 @@ input::placeholder {
 .btn-red {
   background: #ff5c5c;
   color: #fff;
+  margin-left: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
 }
 
 .btn-green {
@@ -320,7 +323,7 @@ input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 14px; 
 }
 
 .queue-item.first {
