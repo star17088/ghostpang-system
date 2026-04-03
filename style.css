@@ -323,7 +323,7 @@ input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 14px; 
+  gap: 20px; 
 }
 
 .queue-item.first {
