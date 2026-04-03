@@ -188,7 +188,7 @@ input::placeholder {
 .btn-red {
   background: #ff5c5c;
   color: #fff;
-  margin-left: 10px;
+  margin-left: auto;
   padding: 10px 12px;
   font-size: 13px;
 }
