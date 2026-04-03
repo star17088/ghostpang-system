@@ -283,6 +283,11 @@ input::placeholder {
 .pc-queue-list {
   display: grid;
   gap: 10px;
+  justify-items: center;
+}
+
+.queue-item {
+  width: 80%;
 }
 
 .queue-item {
