@@ -272,7 +272,7 @@ input::placeholder {
 
 .room-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -606,7 +606,7 @@ input::placeholder {
 
 @media (max-width: 768px) {
   .room-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -635,8 +635,13 @@ input::placeholder {
     width: 100%;
   }
 
-    .queue-item {
+  .room-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .queue-item {
     width: 100%;
+    padding: 10px 12px;
   }
 
   .pc-queue-item {
@@ -644,21 +649,23 @@ input::placeholder {
   }
 
   .line {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     white-space: nowrap;
   }
 
   .line span:nth-child(1) {
     flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .line span:nth-child(2) {
     flex: 1;
+    min-width: 0;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -667,14 +674,9 @@ input::placeholder {
 
   .line span:nth-child(3) {
     flex: 0 0 auto;
-    font-size: 11px;
+    font-size: 12px;
+    white-space: nowrap;
   }
-}
-  
-.room-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
 }
 
 .top-tabs {
