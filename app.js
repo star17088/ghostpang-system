@@ -269,6 +269,22 @@ function handleCustomerLogin() {
   render();
 }
 
+function checkAdminAutoLogin() {
+  const saved = localStorage.getItem("adminLoginTime");
+  if (!saved) return;
+
+  const loginTime = Number(saved);
+  const now = Date.now();
+
+  const THREE_HOURS = 1000 * 60 * 60 * 3;
+
+  if (now - loginTime < THREE_HOURS) {
+    state.adminLoggedIn = true;
+  } else {
+    localStorage.removeItem("adminLoginTime");
+  }
+}
+
 function handleCustomerSaveStep2() {
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -341,6 +357,7 @@ function handleReserve(queueKey) {
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
     state.adminLoggedIn = true;
+    localStorage.setItem("adminLoginTime", Date.now());
     state.screen = "admin";
     render();
   } else {
@@ -1020,6 +1037,7 @@ async function loadData() {
 
 loadData().then(async () => {
   await fixQueueDataOnce();
+  checkAdminAutoLogin(); 
   syncScreenWithHash();
   render();
 });
