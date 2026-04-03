@@ -536,11 +536,10 @@ input::placeholder {
   margin-top: 0;
 }
 
-.point-row {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  position: static;
+.top-tabs,
+.tab-row {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .admin-actions {
@@ -597,13 +596,8 @@ input::placeholder {
 
   .pc-queue-item,
   .queue-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .pc-team,
-  .pc-rank {
-    font-size: 24px;
+    flex-direction: row;
+    align-items: center;
   }
 }
 
@@ -638,11 +632,36 @@ input::placeholder {
     width: 100%;
   }
 
-  .top-tabs,
-  .tab-row,
-  .point-row {
-    display: grid;
-    grid-template-columns: 1fr;
+    .queue-item {
+    width: 100%;
+  }
+
+  .pc-queue-item {
+    padding: 14px 16px;
+  }
+
+  .line {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .line span:nth-child(1) {
+    flex: 0 0 auto;
+  }
+
+  .line span:nth-child(2) {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .line span:nth-child(3) {
+    flex: 0 0 auto;
+    font-size: 14px;
   }
   
 }
