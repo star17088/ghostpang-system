@@ -112,12 +112,12 @@ input {
 .queue-item .btn-red,
 .user-item .btn-red,
 .admin-queue-item .btn-red {
-  width: 64px !important;
-  min-width: 64px;
-  max-width: 64px;
-  flex: 0 0 64px;
-  margin-left: 10px;
-  padding: 10px 0;
+  width: auto !important;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 8px 12px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -247,13 +247,6 @@ input::placeholder {
   justify-content: center;
 }
 
-.user-item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-right: 40px;
-}
-
 .user-item-bottom {
   display: flex;
   justify-content: space-between;
@@ -327,7 +320,7 @@ input::placeholder {
 }
 
 .queue-item {
-  width: 80%;
+  width: 100%;
 }
 
 .queue-item {
@@ -531,7 +524,8 @@ input::placeholder {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .user-item-name,
@@ -599,21 +593,6 @@ input::placeholder {
   flex: 1;
   min-width: 0;
   width: auto;
-}
-
-.queue-item .btn-red,
-.user-item .btn-red,
-.admin-queue-item .btn-red {
-  width: auto;
-  flex-shrink: 0;
-  white-space: nowrap;
-  margin-left: auto;
-}
-
-.user-item-top,
-.admin-queue-top {
-  flex-wrap: nowrap;
-  min-width: 0;
 }
 
 .queue-box {
