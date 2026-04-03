@@ -666,18 +666,28 @@ input::placeholder {
   }
 
   .line {
-    font-size: 13px;
-    font-weight: 700;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    white-space: nowrap;
+    font-size: 22px !important;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .rank,
+  .team {
+    font-size: 22px !important;
+    font-weight: 900;
+    line-height: 1.1;
     white-space: nowrap;
   }
 
   .line span:nth-child(1) {
     flex: 0 0 auto;
     white-space: nowrap;
+    font-size: 22px !important;
   }
 
   .line span:nth-child(2) {
@@ -687,12 +697,14 @@ input::placeholder {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 22px !important;
   }
 
   .line span:nth-child(3) {
     flex: 0 0 auto;
-    font-size: 12px;
     white-space: nowrap;
+    font-size: 16px !important;
+    font-weight: 500;
   }
 }
 
