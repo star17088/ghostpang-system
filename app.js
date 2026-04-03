@@ -795,42 +795,46 @@ const users = state.searchKeyword.trim()
           </div>
 
           <div class="user-list">
-            ${
-              users.length === 0
-                ? `<div class="empty-text">${
-                    state.searchKeyword.trim()
-                      ? "검색 결과가 없습니다."
-                      : "아직 포인트를 한 번도 받지 않은 고객이 없습니다."
-                  }</div>`
-                : users.map((user) => `
-                    <div class="user-item">
-                      <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
+           ${
+  users.length === 0
+    ? `<div class="empty-text">${
+        state.searchKeyword.trim()
+          ? "검색 결과가 없습니다."
+          : "아직 포인트를 한 번도 받지 않은 고객이 없습니다."
+      }</div>`
+    : users.map((user) => `
+        <div class="user-item">
+          <button class="delete-user-btn" onclick="deleteUser('${user.id}')">✕</button>
 
-                      <div class="user-item-top">
-                        <div class="user-item-name">${escapeHtml(user.teamName)}</div>
-                        <div class="user-item-phone">${escapeHtml(maskPhone(user.phone))}</div>
-                      </div>
+          <div class="user-item-top">
+            <div class="user-name">
+              ${escapeHtml(user.teamName)}
+              <span class="user-phone">(${escapeHtml(maskPhone(user.phone))})</span>
+            </div>
+          </div>
 
-                      <div class="user-item-meta">
-                        <span>인원 ${escapeHtml(user.people || "-")}명</span>
-                        <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
-                        <span>포인트 ${escapeHtml(user.points || 0)}개</span>
-                      </div>
+          <div class="point-row">
+            ${[1, 2, 3, 4, 5].map(n => `
+              <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
+            `).join("")}
 
-                      <div class="point-row">
-                        ${[1, 2, 3, 4, 5].map(n => `
-                          <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
-                        `).join("")}
+            <button class="btn btn-red" onclick="subtractPoints('${user.id}', 1)">-1</button>
+          </div>
 
-                        <button class="btn btn-red" onclick="subtractPoints('${user.id}', 1)">-1</button>
-                      </div>
+          <div class="user-item-bottom">
+            <div class="user-item-meta">
+              <span>인원 ${escapeHtml(user.people || "-")}명</span>
+              <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
+              <span>포인트 ${escapeHtml(user.points || 0)}개</span>
+            </div>
 
-                      <div class="point-row">
-                        <button class="btn btn-green" onclick="giveBoardgamePoint('${user.id}')">보드게임 1지급</button>
-                      </div>
-                    </div>
-                  `).join("")
-            }
+            <button class="btn btn-green boardgame-btn" onclick="giveBoardgamePoint('${user.id}')">
+              보드게임 지급
+            </button>
+          </div>
+        </div>
+      `).join("")
+}
           </div>
         </section>
       </div>
