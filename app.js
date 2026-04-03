@@ -578,6 +578,7 @@ function customerScreenHtml() {
                     type="text"
                     value="${escapeHtml(state.customerForm.teamName)}"
                     oninput="updateCustomerForm('teamName', this.value)"
+                    onkeydown="if(event.key==='Enter'){handleCustomerLogin();}"
                     placeholder="예: 또야팀"
                   />
                 </div>
@@ -588,6 +589,7 @@ function customerScreenHtml() {
                     type="text"
                     value="${escapeHtml(state.customerForm.phone)}"
                     oninput="updateCustomerForm('phone', onlyNumber(this.value)); this.value=onlyNumber(this.value)"
+                    onkeydown="if(event.key==='Enter'){handleCustomerLogin();}"
                     placeholder="숫자만 입력"
                   />
                 </div>
@@ -748,6 +750,7 @@ const users = state.searchKeyword.trim()
               type="password"
               value="${escapeHtml(state.adminPasswordInput)}"
               oninput="updateAdminPassword(this.value)"
+              
               placeholder="비밀번호 입력"
             />
           </div>
@@ -769,7 +772,7 @@ const users = state.searchKeyword.trim()
               type="text"
               value="${escapeHtml(state.searchKeyword)}"
               oninput="updateSearchKeyword(this.value)"
-              onkeydown="if(event.key==='Enter'){render();}"
+              onkeydown="if(event.key==='Enter'){runAdminSearch();}"
               placeholder="팀명 또는 전화번호 검색"
             />
           </div>
