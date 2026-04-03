@@ -804,6 +804,8 @@ const users = state.searchKeyword.trim()
                         ${[1, 2, 3, 4, 5].map(n => `
                           <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
                         `).join("")}
+
+                        <button class="btn btn-red" onclick="subtractPoints('${user.id}', 1)">-1</button>
                       </div>
 
                       <div class="point-row">
