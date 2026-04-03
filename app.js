@@ -744,7 +744,7 @@ const users = state.searchKeyword.trim()
               type="password"
               value="${escapeHtml(state.adminPasswordInput)}"
               oninput="updateAdminPassword(this.value)"
-              
+              onkeydown="if(event.key==='Enter'){handleAdminLogin();}"
               placeholder="비밀번호 입력"
             />
           </div>
