@@ -231,10 +231,28 @@ input::placeholder {
 
 .user-item-top {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  align-items: center;
   padding-right: 40px;
+}
+
+.user-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 12px;
+}
+
+.boardgame-btn {
+  margin-left: auto;
+}
+
+.user-phone {
+  margin-left: 6px;
+  font-size: 14px;
+  color: #9aa6bc;
+  font-weight: 500;
 }
 
 .delete-user-btn:hover {
@@ -515,19 +533,21 @@ input::placeholder {
   flex-wrap: wrap;
   color: #a6b1c4;
   font-size: 14px;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .point-row {
   display: flex;
   gap: 6px;
   margin-top: 6px;
+  position: static;
 }
 
 .admin-actions {
   position: absolute;
   top: 12px;
   right: 12px;
+  margin-top: 0;
 }
 
 .user-header {
