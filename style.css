@@ -579,9 +579,26 @@ input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
   font-size: 18px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.queue-item .btn-red,
+.user-item .btn-red,
+.admin-queue-item .btn-red {
+  width: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.user-item-top,
+.admin-queue-top {
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
