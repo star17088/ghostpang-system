@@ -522,6 +522,12 @@ input::placeholder {
   margin-top: 0;
 }
 
+.user-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .admin-queue-item {
   background: rgba(255,255,255,0.04);
   border-radius: 14px;
