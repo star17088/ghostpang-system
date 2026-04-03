@@ -616,6 +616,27 @@ input::placeholder {
   min-width: 0;
 }
 
+.queue-box {
+  width: 100%;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  flex-wrap: nowrap;
+}
+
+.queue-box span {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .queue-box {
+    padding: 14px 16px;
+  }
+}
+
 @media (max-width: 1100px) {
   .layout.two-col,
   .admin-layout {
