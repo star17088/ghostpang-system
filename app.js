@@ -345,9 +345,23 @@ function handleReserve(queueKey) {
   const queue = state.data.queues[queueKey];
   const nowMinute = getNowMinute();
 
+  let newStartAt;
+
+  if (queue.length === 0) {
+    newStartAt = nowMinute + 16;
+  } else {
+    const lastItem = queue[queue.length - 1];
+    const lastStartAt =
+      typeof lastItem === "string" || typeof lastItem.startAt !== "number"
+        ? nowMinute
+        : lastItem.startAt;
+
+    newStartAt = Math.max(nowMinute, lastStartAt) + 16;
+  }
+
   queue.push({
     userId: currentUser.id,
-    startAt: nowMinute + (queue.length + 1) * 16
+    startAt: newStartAt
   });
 
   saveData();
