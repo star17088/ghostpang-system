@@ -680,10 +680,10 @@ ${
           .map(
             (user, index) => `
               <div class="queue-item ${index === 0 ? "first" : ""}">
-                <div class="rank">${index + 1}순위</div>
-                <div class="team-wrap">
-                  <div class="team">${escapeHtml(user.teamName)}</div>
-                  <div class="wait-time">${getRemainingMinutes(room.key, index)}분</div>
+                <div class="line">
+                  <span>${index + 1}순위</span>
+                  <span>${escapeHtml(user.teamName)}</span>
+                  <span>${getRemainingMinutes(room.key, index)}분</span>
                 </div>
               </div>
             `
