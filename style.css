@@ -334,6 +334,15 @@ input::placeholder {
   gap: 20px; 
 }
 
+.queue-item {
+  padding-right: 6px;
+}
+
+.queue-item .btn-red {
+  margin-left: auto;
+  margin-right: -4px;
+}
+
 .queue-item.first {
   background: linear-gradient(90deg, rgba(255,138,0,0.22), rgba(255,138,0,0.06));
   border: 1px solid rgba(255,138,0,0.30);
