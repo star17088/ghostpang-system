@@ -109,6 +109,21 @@ input {
   font-weight: 900;
 }
 
+.queue-item .btn-red,
+.user-item .btn-red,
+.admin-queue-item .btn-red {
+  width: 64px !important;
+  min-width: 64px;
+  max-width: 64px;
+  flex: 0 0 64px;
+  margin-left: 10px;
+  padding: 10px 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .section-title {
   margin: 0 0 14px;
   font-size: 20px;
