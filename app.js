@@ -534,13 +534,7 @@ function adminQueueCardHtml(queueKey, title) {
   !isBoardgame
     ? `<div class="queue-meta">
         <span>인원 ${escapeHtml(user.people || "-")}명</span>
-        <span>테이블</span>
-        <input
-          type="text"
-          value="${escapeHtml(user.tableNo || "")}"
-          onchange="updateUserTable('${user.id}', this.value)"
-          placeholder="테이블 번호"
-        />
+        <span>테이블 ${escapeHtml(user.tableNo || "-")}</span>
       </div>`
     : `<div class="queue-meta">
         <span>로그인 시간 ${escapeHtml(user.boardgameJoinedAt || "-")}</span>
