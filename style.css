@@ -644,7 +644,7 @@ input::placeholder {
   }
 
   .line {
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 700;
     display: flex;
     justify-content: space-between;
@@ -667,7 +667,7 @@ input::placeholder {
 
   .line span:nth-child(3) {
     flex: 0 0 auto;
-    font-size: 14px;
+    font-size: 11px;
   }
 }
   
