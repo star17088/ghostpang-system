@@ -542,7 +542,8 @@ function adminQueueCardHtml(queueKey, title) {
 }
 
                       <div class="admin-actions">
-                        <button class="btn btn-red" onclick="removeFromQueue('${queueKey}', '${user.id}')">입장</button>
+                        <button class="btn btn-red" onclick="removeFromQueue('${queueKey}', '${user.id}')">
+                          ${isBoardgame ? "퇴장" : "입장"}
                       </div>
                     </div>
                   `
