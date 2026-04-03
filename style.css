@@ -611,8 +611,9 @@ input::placeholder {
 }
 
 @media (max-width: 640px) {
-  .queue-box {
-    padding: 14px 16px;
+  .line span {
+    font-size: 16px !important;
+    font-weight: 600;
   }
 }
 
@@ -691,29 +692,19 @@ input::placeholder {
     line-height: 1.1;
   }
 
-  .rank,
-  .team {
-    font-size: 22px !important;
-    font-weight: 900;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
+.line span:nth-child(1) {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 
-  .line span:nth-child(1) {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    font-size: 22px !important;
-  }
-
-  .line span:nth-child(2) {
-    flex: 1;
-    min-width: 0;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 22px !important;
-  }
+.line span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
   .line span:nth-child(3) {
     flex: 0 0 auto;
