@@ -230,6 +230,10 @@ input::placeholder {
 }
 
 .user-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   padding-right: 40px;
 }
 
@@ -514,12 +518,16 @@ input::placeholder {
   margin-top: 10px;
 }
 
-.point-row,
+.point-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .admin-actions {
   position: absolute;
   top: 12px;
   right: 12px;
-  margin-top: 0;
 }
 
 .user-header {
