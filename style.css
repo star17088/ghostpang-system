@@ -650,6 +650,7 @@ input::placeholder {
     justify-content: space-between;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
   }
 
   .line span:nth-child(1) {
@@ -659,15 +660,17 @@ input::placeholder {
   .line span:nth-child(2) {
     flex: 1;
     text-align: center;
-    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .line span:nth-child(3) {
     flex: 0 0 auto;
     font-size: 14px;
   }
-  
 }
+  
 .room-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
