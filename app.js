@@ -4,7 +4,7 @@ const ADMIN_PASSWORD = "0702";
 const ROOM_OPTIONS = [
   { key: "big", label: "빅보스룸", size: "3~6인" },
   { key: "small1", label: "고스트룸1", size: "2~4인" },
-  { key: "small2", label: "고스트2", size: "2~4인" },
+  { key: "small2", label: "고스트룸2", size: "2~4인" },
 ];
 
 const initialData = {
