@@ -2,9 +2,9 @@ import { DATA_DOC, getDoc, setDoc, onSnapshot } from "./firebase.js";
 const ADMIN_PASSWORD = "0702";
 
 const ROOM_OPTIONS = [
-  { key: "big", label: "큰방", size: "3~6인" },
-  { key: "small1", label: "작은방1", size: "2~4인" },
-  { key: "small2", label: "작은방2", size: "2~4인" },
+  { key: "big", label: "빅보스룸", size: "3~6인" },
+  { key: "small1", label: "고스트룸1", size: "2~4인" },
+  { key: "small2", label: "고스트2", size: "2~4인" },
 ];
 
 const initialData = {
@@ -876,6 +876,7 @@ function renderHeader() {
         <h1>고스트팡을 찾아주셔서 감사합니다.</h1>
         <p>해당 인원 수에 맞게 방을 선택해 주세요</p>
         <p>(무료로 입장한 미취학 아동은 인원수에 포함되지 않습니다)</p>
+        <p>인원수,테이블번호 저장 후 ★대기등록★해주셔야합니다</p>
       </div>
 
       <div class="top-tabs">
