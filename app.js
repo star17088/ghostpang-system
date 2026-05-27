@@ -24,6 +24,8 @@ let state = {
   adminLoggedIn: false,
   adminPasswordInput: "",
   searchKeyword: "",
+  spokenQueueIds: {},
+voiceUnlocked: false,
   showAllUsers: false,
   customerForm: {
     teamName: "",
@@ -90,6 +92,64 @@ async function fixQueueDataOnce() {
 
 function onlyNumber(value) {
   return String(value || "").replace(/[^0-9]/g, "");
+}
+
+function getRoomLabel(queueKey) {
+  if (queueKey === "big") return "빅보스룸";
+  if (queueKey === "small1") return "고스트룸1";
+  if (queueKey === "small2") return "고스트룸2";
+  return "";
+}
+
+function speakPcGuide(text) {
+  if (!state.voiceUnlocked) return;
+  if (!window.speechSynthesis) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ko-KR";
+  utter.rate = 0.9;
+  utter.pitch = 1;
+
+  window.speechSynthesis.speak(utter);
+}
+
+function checkPcVoiceGuide() {
+  if (state.screen !== "pc") return;
+  if (state.pcTab !== "rooms") return;
+
+  ["big", "small1", "small2"].forEach((queueKey) => {
+    const queue = state.data.queues?.[queueKey] || [];
+
+    queue.forEach((item, index) => {
+      if (!item || typeof item === "string") return;
+
+      const remaining = getRemainingMinutes(queueKey, index);
+      const user = getUserById(item.userId);
+
+      if (!user) return;
+
+      const speakKey = `${queueKey}_${item.userId}_${item.startAt}`;
+
+      if (remaining <= 1 && !state.spokenQueueIds[speakKey]) {
+        state.spokenQueueIds[speakKey] = true;
+
+        speakPcGuide(
+          `${user.teamName}팀은 ${getRoomLabel(queueKey)} 앞으로 대기해 주세요`
+        );
+      }
+    });
+  });
+}
+
+function unlockPcVoice() {
+  state.voiceUnlocked = true;
+
+  const utter = new SpeechSynthesisUtterance("음성 안내를 시작합니다");
+  utter.lang = "ko-KR";
+
+  window.speechSynthesis.speak(utter);
+
+  render();
 }
 
 function escapeHtml(value) {
