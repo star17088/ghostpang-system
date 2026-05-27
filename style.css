@@ -792,3 +792,13 @@ input::placeholder {
 .admin-queue-item .btn-red {
   margin-left: 0;
 }
+
+
+.admin-menu-box summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-menu-box summary::-webkit-details-marker {
+  display: none;
+}
