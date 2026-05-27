@@ -991,9 +991,9 @@ const users = state.searchKeyword.trim()
         </section>
 
         <div class="admin-room-grid">
-          ${adminQueueCardHtml("big", "큰방")}
-          ${adminQueueCardHtml("small1", "작은방1")}
-          ${adminQueueCardHtml("small2", "작은방2")}
+          ${adminQueueCardHtml("big", "빅보스룸")}
+          ${adminQueueCardHtml("small1", "고스트룸1")}
+          ${adminQueueCardHtml("small2", "고스트룸2")}
         </div>
 
         <div class="admin-board-section">
