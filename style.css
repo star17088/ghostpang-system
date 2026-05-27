@@ -565,8 +565,9 @@ input::placeholder {
 
 .admin-actions {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
   margin-top: 0;
 }
 
@@ -781,4 +782,13 @@ input::placeholder {
 .walkin-buttons .btn {
   flex: 1;
   min-width: 120px;
+}
+
+.admin-queue-item {
+  width: 100%;
+  padding-right: 92px;
+}
+
+.admin-queue-item .btn-red {
+  margin-left: 0;
 }
