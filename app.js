@@ -373,12 +373,11 @@ function adminCreateWalkIn(queueKey) {
 
   const people = prompt("인원수를 입력해주세요.") || "";
   const tableNo = prompt("테이블 번호를 입력해주세요.") || "";
-  const phone = prompt("전화번호를 입력해주세요. 없으면 비워두세요.") || "";
 
   const user = {
     id: makeId(),
     teamName: teamName.trim(),
-    phone: onlyNumber(phone),
+    phone: "",
     people: onlyNumber(people),
     tableNo: tableNo.trim(),
     points: 0,
@@ -684,7 +683,7 @@ function customerScreenHtml() {
                     type="text"
                     value="${escapeHtml(state.customerForm.tableNo)}"
                     oninput="updateCustomerForm('tableNo', this.value)"
-                    placeholder="예: A-3"
+                    placeholder="예: 3"
                   />
                 </div>
 
