@@ -770,3 +770,15 @@ input::placeholder {
   flex: 1;
   min-width: 110px;
 }
+
+.walkin-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.walkin-buttons .btn {
+  flex: 1;
+  min-width: 120px;
+}
