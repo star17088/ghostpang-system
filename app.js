@@ -106,9 +106,21 @@ function speakPcGuide(text) {
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "ko-KR";
-  utter.rate = 0.9;
-  utter.pitch = 1;
+utter.lang = "ko-KR";
+utter.rate = 0.88;
+utter.pitch = 1.35;
+
+const voices = window.speechSynthesis.getVoices();
+
+console.log(voices);
+
+const koreanVoice = voices.find(v =>
+  v.name.includes("Heami")
+);
+
+if (koreanVoice) {
+  utter.voice = koreanVoice;
+}
 
   window.speechSynthesis.speak(utter);
 }
@@ -116,6 +128,7 @@ function speakPcGuide(text) {
 function checkPcVoiceGuide() {
   if (state.screen !== "pc") return;
   if (state.pcTab !== "rooms") return;
+  if (!state.voiceUnlocked) return;
 
   ["big", "small1", "small2"].forEach((queueKey) => {
     const queue = state.data.queues?.[queueKey] || [];
@@ -130,7 +143,7 @@ function checkPcVoiceGuide() {
 
       const speakKey = `${queueKey}_${item.userId}_${item.startAt}`;
 
-      if (remaining <= 1 && !state.spokenQueueIds[speakKey]) {
+     if (remaining <= 2 && !state.spokenQueueIds[speakKey]) {
         state.spokenQueueIds[speakKey] = true;
 
         speakPcGuide(
@@ -143,6 +156,7 @@ function checkPcVoiceGuide() {
 
 function unlockPcVoice() {
   state.voiceUnlocked = true;
+  state.spokenQueueIds = {};
 
   const utter = new SpeechSynthesisUtterance("음성 안내를 시작합니다");
   utter.lang = "ko-KR";
