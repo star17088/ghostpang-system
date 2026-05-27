@@ -905,7 +905,13 @@ const users = state.searchKeyword.trim()
         <section class="card sticky-top">
           <div class="admin-header-row">
             <h2 class="big-title">관리자용 대기 현황</h2>
-            <button class="btn btn-tab" onclick="setScreen('customer')">고객화면으로</button>
+            <details class="admin-menu-box">
+  <summary>메뉴</summary>
+
+  <button class="btn btn-tab" onclick="setScreen('customer')">
+    고객화면으로
+  </button>
+</details>
           </div>
         </section>
 
