@@ -906,7 +906,7 @@ const users = state.searchKeyword.trim()
           <div class="admin-header-row">
             <h2 class="big-title">관리자용 대기 현황</h2>
             <details class="admin-menu-box">
-  <summary>메뉴</summary>
+  <summary>고객화면으로</summary>
 
   <button class="btn btn-tab" onclick="setScreen('customer')">
     고객화면으로
