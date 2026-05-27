@@ -795,7 +795,7 @@ function pcScreenHtml() {
       <section class="card hero-card">
         <div>
   <h2 class="pc-main-title">고스트팡 실시간 대기 현황</h2>
-  <p class="pc-sub">TV / 모니터 전체화면용</p>
+  <p class="pc-sub">예상 대기시간 확인 후 신발을 갈아신어 주세요</p>
 
   <button class="btn btn-orange" onclick="unlockPcVoice()">
     음성 안내 시작
