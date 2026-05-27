@@ -354,6 +354,19 @@ function handleReserve(queueKey) {
   render();
 }
 
+function adminAddQueue(queueKey, userId) {
+  const queue = state.data.queues[queueKey];
+  const nowMinute = getNowMinute();
+
+  queue.push({
+    userId,
+    startAt: nowMinute + (queue.length + 1) * 16,
+  });
+
+  saveData();
+  render();
+}
+
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
     state.adminLoggedIn = true;
@@ -831,6 +844,15 @@ const users = state.searchKeyword.trim()
             <button class="btn btn-green boardgame-btn" onclick="giveBoardgamePoint('${user.id}')">
               보드게임 지급
             </button>
+            <details class="admin-wait-box">
+  <summary>대기등록</summary>
+
+  <div class="admin-wait-buttons">
+    <button class="btn btn-orange" onclick="adminAddQueue('big', '${user.id}')">빅보스룸</button>
+    <button class="btn btn-blue" onclick="adminAddQueue('small1', '${user.id}')">고스트룸1</button>
+    <button class="btn btn-blue" onclick="adminAddQueue('small2', '${user.id}')">고스트룸2</button>
+  </div>
+</details>
           </div>
         </div>
       `).join("")
@@ -992,6 +1014,7 @@ window.resetAll = resetAll;
 window.onlyNumber = onlyNumber;
 window.showAllUsersList = showAllUsersList;
 window.updateUserTable = updateUserTable;
+window.adminAddQueue = adminAddQueue;
 
 setInterval(() => {
   const now = Date.now();
