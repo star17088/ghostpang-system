@@ -335,6 +335,13 @@ function handleReserve(queueKey) {
     return;
   }
 
+  const people = Number(currentUser.people || 0);
+
+if (queueKey === "big" && (people < 3 || people > 6)) {
+  alert("빅보스룸은 3~6인만 이용 가능합니다.");
+  return;
+}
+
   if (isAlreadyInQueue(queueKey, currentUser.id)) {
     alert("이미 해당 대기열에 등록되어 있습니다.");
     return;
@@ -885,7 +892,10 @@ const users = state.searchKeyword.trim()
               보드게임 지급
             </button>
             <details class="admin-wait-box">
-  <summary>대기등록</summary>
+  <summary>대기등록 (강제등록 가능)</summary>
+  <div class="admin-force-notice">
+  ※ 관리자 강제등록 가능
+</div>
 
   <div class="admin-wait-buttons">
     <button class="btn btn-orange" onclick="adminAddQueue('big', '${user.id}')">빅보스룸</button>
