@@ -826,7 +826,7 @@ const users = state.searchKeyword.trim()
         <section class="card">
           <h2 class="big-title">고객 검색 / 포인트 지급</h2>
 
-          <div class="walkin-buttons">
+          <div class="point-row" style="margin-bottom:12px;">
   <button class="btn btn-orange" onclick="adminCreateWalkIn('big')">현장접수 빅보스룸</button>
   <button class="btn btn-blue" onclick="adminCreateWalkIn('small1')">현장접수 고스트룸1</button>
   <button class="btn btn-blue" onclick="adminCreateWalkIn('small2')">현장접수 고스트룸2</button>
