@@ -367,6 +367,41 @@ function adminAddQueue(queueKey, userId) {
   render();
 }
 
+function adminCreateWalkIn(queueKey) {
+  const teamName = prompt("팀명을 입력해주세요.");
+  if (!teamName) return;
+
+  const people = prompt("인원수를 입력해주세요.") || "";
+  const tableNo = prompt("테이블 번호를 입력해주세요.") || "";
+  const phone = prompt("전화번호를 입력해주세요. 없으면 비워두세요.") || "";
+
+  const user = {
+    id: makeId(),
+    teamName: teamName.trim(),
+    phone: onlyNumber(phone),
+    people: onlyNumber(people),
+    tableNo: tableNo.trim(),
+    points: 0,
+    totalPointsReceived: 0,
+    boardgamePoint: 0,
+    boardgameJoinedAt: "",
+    createdAt: Date.now(),
+  };
+
+  state.data.users.push(user);
+
+  const queue = state.data.queues[queueKey];
+  const nowMinute = getNowMinute();
+
+  queue.push({
+    userId: user.id,
+    startAt: nowMinute + (queue.length + 1) * 16,
+  });
+
+  saveData();
+  render();
+}
+
 function handleAdminLogin() {
   if (state.adminPasswordInput === ADMIN_PASSWORD) {
     state.adminLoggedIn = true;
@@ -792,6 +827,12 @@ const users = state.searchKeyword.trim()
         <section class="card">
           <h2 class="big-title">고객 검색 / 포인트 지급</h2>
 
+          <div class="walkin-buttons">
+  <button class="btn btn-orange" onclick="adminCreateWalkIn('big')">현장접수 빅보스룸</button>
+  <button class="btn btn-blue" onclick="adminCreateWalkIn('small1')">현장접수 고스트룸1</button>
+  <button class="btn btn-blue" onclick="adminCreateWalkIn('small2')">현장접수 고스트룸2</button>
+</div>
+
           <div class="form-group">
             <input
               type="text"
@@ -1015,6 +1056,7 @@ window.onlyNumber = onlyNumber;
 window.showAllUsersList = showAllUsersList;
 window.updateUserTable = updateUserTable;
 window.adminAddQueue = adminAddQueue;
+window.adminCreateWalkIn = adminCreateWalkIn;
 
 setInterval(() => {
   const now = Date.now();
