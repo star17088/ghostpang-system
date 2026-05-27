@@ -744,3 +744,29 @@ input::placeholder {
 .admin-board-section {
   margin-top: 16px;
 }
+
+/* 관리자 대기등록 */
+
+.admin-wait-box {
+  margin-top: 10px;
+}
+
+.admin-wait-box summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff7a00;
+  padding: 8px 0;
+}
+
+.admin-wait-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-wait-buttons .btn {
+  flex: 1;
+  min-width: 110px;
+}
