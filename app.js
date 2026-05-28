@@ -144,7 +144,7 @@ function checkPcVoiceGuide() {
       console.log("음성체크", queueKey, user.teamName, remaining);
       const speakKey = `${queueKey}_${item.userId}_${item.startAt}`;
 
-     if (remaining <= 999 && !state.spokenQueueIds[speakKey]) {
+     if (remaining <= 2 && !state.spokenQueueIds[speakKey]) {
         state.spokenQueueIds[speakKey] = true;
 
         speakPcGuide(
