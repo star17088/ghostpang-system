@@ -141,6 +141,7 @@ function checkPcVoiceGuide() {
 
       if (!user) return;
 
+      console.log("음성체크", queueKey, user.teamName, remaining);
       const speakKey = `${queueKey}_${item.userId}_${item.startAt}`;
 
      if (remaining <= 2 && !state.spokenQueueIds[speakKey]) {
@@ -164,6 +165,10 @@ function unlockPcVoice() {
   window.speechSynthesis.speak(utter);
 
   render();
+
+  setTimeout(() => {
+    checkPcVoiceGuide();
+  }, 1500);
 }
 
 function escapeHtml(value) {
