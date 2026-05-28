@@ -107,8 +107,8 @@ function speakPcGuide(text) {
 
   const utter = new SpeechSynthesisUtterance(text);
 utter.lang = "ko-KR";
-utter.rate = 0.88;
-utter.pitch = 1.35;
+utter.rate = 0.85;
+utter.pitch = 1.4;
 
 const voices = window.speechSynthesis.getVoices();
 
