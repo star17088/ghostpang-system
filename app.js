@@ -1136,6 +1136,18 @@ function runAdminSearch() {
   render();
 }
 
+function loadVoiceList() {
+  const voices = window.speechSynthesis.getVoices();
+
+  console.log("사용 가능한 음성 목록:", voices);
+
+  voices.forEach((v, i) => {
+    console.log(`${i}: ${v.name} / ${v.lang}`);
+  });
+}
+
+window.speechSynthesis.onvoiceschanged = loadVoiceList;
+
 window.runAdminSearch = runAdminSearch;
 window.setScreen = setScreen;
 window.setPcTab = setPcTab;
@@ -1159,6 +1171,7 @@ window.updateUserTable = updateUserTable;
 window.adminAddQueue = adminAddQueue;
 window.adminCreateWalkIn = adminCreateWalkIn;
 window.unlockPcVoice = unlockPcVoice;
+window.loadVoiceList = loadVoiceList;
 
 setInterval(() => {
   const now = Date.now();
