@@ -1221,6 +1221,10 @@ async function loadData() {
   }
 }
 
+setTimeout(() => {
+  loadVoiceList();
+}, 2000);
+
 loadData().then(async () => {
   await fixQueueDataOnce();
   checkAdminAutoLogin(); 
