@@ -308,33 +308,72 @@ function updateBraceletInput(userId, value) {
   state.braceletInputs[userId] = onlyNumber(value);
 }
 
-function handleBraceletRegister(userId) {
+async function handleBraceletRegister(userId) {
   const user = getUserById(userId);
   if (!user) return;
 
   const braceletNumber = state.braceletInputs[userId] || "";
+  const grantedPoints = user.lastGrantedPoints || 0;
 
   if (!braceletNumber) {
     alert("팔찌번호를 스캔해주세요.");
     return;
   }
 
-  // 이번에 별도로 기록한 지급 포인트
-  const grantedPoints = user.lastGrantedPoints || 0;
+  const payload = {
+    memberName: user.teamName,
+    phone: user.phone,
+    icCardNumber: braceletNumber,
+    cardCount: grantedPoints
+  };
 
-  // 자동 계산
-  const cardTime = grantedPoints * 900;
-  const chargeAmount = grantedPoints;
-  const minutes = grantedPoints * 15;
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8787/api/test-register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
 
-  alert(
-    `${user.teamName}팀\n` +
-    `팔찌번호: ${braceletNumber}\n` +
-    `지급 포인트: ${grantedPoints}\n` +
-    `Card Time: ${cardTime}초 (${minutes}분)\n` +
-    `Charge Amount: ${chargeAmount}\n\n` +
-    `팔찌 등록값이 정상 계산되었습니다.`
-  );
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      console.error("팔찌 등록 실패:", result);
+
+      alert(
+        result.message ||
+        result.error ||
+        "팔찌 등록에 실패했습니다."
+      );
+
+      return;
+    }
+
+    const cardTime = grantedPoints * 900;
+    const minutes = grantedPoints * 15;
+
+    alert(
+      `${user.teamName}팀 팔찌 등록이 완료되었습니다.\n\n` +
+      `팔찌번호: ${braceletNumber}\n` +
+      `지급 포인트: ${grantedPoints}\n` +
+      `Card Time: ${cardTime}초 (${minutes}분)\n` +
+      `Charge Amount: ${grantedPoints}`
+    );
+
+    state.braceletInputs[userId] = "";
+    render();
+  } catch (error) {
+    console.error("로컬 서버 연결 실패:", error);
+
+    alert(
+      "팔찌 등록 서버에 연결할 수 없습니다.\n" +
+      "관리자 PC에서 run 파일이 실행 중인지 확인해주세요."
+    );
+  }
 }
 
 function showAllUsersList() {
