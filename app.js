@@ -411,6 +411,9 @@ async function handleBraceletRegister(userId) {
 function showAllUsersList() {
   state.searchKeyword = "";
   state.showAllUsers = true;
+
+  alert(`현재 저장된 전체 고객: ${state.data.users.length}명`);
+
   render();
 }
 
