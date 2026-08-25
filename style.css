@@ -802,3 +802,75 @@ input::placeholder {
 .admin-menu-box summary::-webkit-details-marker {
   display: none;
 }
+
+/* 관리자 포인트 및 팔찌 등록 */
+
+.point-bracelet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.point-button-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.point-button-group .btn {
+  flex: 0 0 auto;
+}
+
+.user-item .point-minus-btn {
+  width: auto !important;
+  margin-left: 0;
+}
+
+.bracelet-register-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.bracelet-number-input {
+  flex: 1;
+  min-width: 140px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.bracelet-register-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  height: 42px;
+  padding: 0 14px;
+}
+
+@media (max-width: 640px) {
+  .point-bracelet-row {
+    align-items: stretch;
+  }
+
+  .point-button-group {
+    width: 100%;
+  }
+
+  .point-button-group .btn {
+    width: auto;
+    flex: 1;
+  }
+
+  .bracelet-register-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .bracelet-register-btn {
+    width: auto;
+  }
+}
