@@ -23,8 +23,9 @@ let state = {
   currentUserId: null,
   adminLoggedIn: false,
   adminPasswordInput: "",
-  searchKeyword: "",
-  spokenQueueIds: {},
+ searchKeyword: "",
+braceletInputs: {},
+spokenQueueIds: {},
 voiceUnlocked: false,
   showAllUsers: false,
   customerForm: {
@@ -301,6 +302,26 @@ function updateAdminPassword(value) {
 function updateSearchKeyword(value) {
   state.searchKeyword = value;
   state.showAllUsers = false;
+}
+
+function updateBraceletInput(userId, value) {
+  state.braceletInputs[userId] = onlyNumber(value);
+}
+
+function handleBraceletRegister(userId) {
+  const user = getUserById(userId);
+  if (!user) return;
+
+  const braceletNumber = state.braceletInputs[userId] || "";
+
+  if (!braceletNumber) {
+    alert("팔찌번호를 스캔해주세요.");
+    return;
+  }
+
+  alert(
+    `${user.teamName}팀\n팔찌번호: ${braceletNumber}\n\n팔찌등록 버튼이 정상 작동합니다.`
+  );
 }
 
 function showAllUsersList() {
@@ -957,13 +978,48 @@ const users = state.searchKeyword.trim()
             </div>
           </div>
 
-          <div class="point-row">
-            ${[1, 2, 3, 4, 5].map(n => `
-              <button class="btn btn-point" onclick="givePoints('${user.id}', ${n})">+${n}</button>
-            `).join("")}
+          <div class="point-bracelet-row">
+  <div class="point-button-group">
+    ${[1, 2, 3].map(n => `
+      <button
+        class="btn btn-point"
+        onclick="givePoints('${user.id}', ${n})"
+      >
+        +${n}
+      </button>
+    `).join("")}
 
-            <button class="btn btn-red" onclick="subtractPoints('${user.id}', 1)">-1</button>
-          </div>
+    <button
+      class="btn btn-red point-minus-btn"
+      onclick="subtractPoints('${user.id}', 1)"
+    >
+      -1
+    </button>
+  </div>
+
+  <div class="bracelet-register-group">
+    <input
+      class="bracelet-number-input"
+      type="text"
+      inputmode="numeric"
+      autocomplete="off"
+      value="${escapeHtml(state.braceletInputs[user.id] || "")}"
+      oninput="
+        updateBraceletInput('${user.id}', this.value);
+        this.value = onlyNumber(this.value);
+      "
+
+      placeholder="팔찌번호 스캔"
+    />
+
+    <button
+      class="btn btn-blue bracelet-register-btn"
+      onclick="handleBraceletRegister('${user.id}')"
+    >
+      팔찌등록
+    </button>
+  </div>
+</div>
 
           <div class="user-item-bottom">
             <div class="user-item-meta">
@@ -1154,6 +1210,8 @@ window.setPcTab = setPcTab;
 window.updateCustomerForm = updateCustomerForm;
 window.updateAdminPassword = updateAdminPassword;
 window.updateSearchKeyword = updateSearchKeyword;
+window.updateBraceletInput = updateBraceletInput;
+window.handleBraceletRegister = handleBraceletRegister;
 window.handleCustomerLogin = handleCustomerLogin;
 window.handleCustomerSaveStep2 = handleCustomerSaveStep2;
 window.logoutCustomer = logoutCustomer;
