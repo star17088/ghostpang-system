@@ -265,7 +265,15 @@ function getFilteredUsers() {
 }
 
 function getUsersNeverReceivedPoints() {
-  return state.data.users.filter((u) => (u.totalPointsReceived || 0) === 0);
+  return state.data.users.filter((u) => {
+    const neverReceivedPoints =
+      (u.totalPointsReceived || 0) === 0;
+
+    const waitingForBracelet =
+      (u.lastGrantedPoints || 0) > 0;
+
+    return neverReceivedPoints || waitingForBracelet;
+  });
 }
 
 function setScreen(screen) {
@@ -365,17 +373,14 @@ async function handleBraceletRegister(userId) {
       `총 이용시간: ${totalSeconds}초 (${minutes}분)\n` +
       `Charge Amount: ${grantedPoints}`
 
-    state.braceletInputs[userId] = "";
-    render();
-  } catch (error) {
-    console.error("로컬 서버 연결 실패:", error);
+    // 팔찌등록이 완료됐으므로 별도 지급 포인트 초기화
+user.lastGrantedPoints = 0;
 
-    alert(
-      "팔찌 등록 서버에 연결할 수 없습니다.\n" +
-      "관리자 PC에서 run 파일이 실행 중인지 확인해주세요."
-    );
-  }
-}
+// 팔찌 입력칸 초기화
+state.braceletInputs[userId] = "";
+
+await saveData();
+render();
 
 function showAllUsersList() {
   state.searchKeyword = "";
@@ -1204,17 +1209,22 @@ function cleanupOldUsers() {
 }
 
 function render() {
-// if (!state.showAllUsers) {
-//   cleanupOldUsers();
-// }
+  // 화면을 다시 그리기 전 현재 스크롤 위치 기억
+  const currentUserList = document.querySelector(".user-list");
+  const savedUserListScrollTop = currentUserList
+    ? currentUserList.scrollTop
+    : 0;
+
+  const savedPageScrollY = window.scrollY;
 
   const app = document.getElementById("app");
+
   if (!app) {
     console.error("app 요소를 찾을 수 없습니다.");
     return;
   }
 
-    app.innerHTML = `
+  app.innerHTML = `
     <div class="page">
       <div class="container">
         ${renderHeader()}
@@ -1222,6 +1232,15 @@ function render() {
       </div>
     </div>
   `;
+
+  // 화면을 다시 그린 후 기존 고객 목록 스크롤 위치 복원
+  const nextUserList = document.querySelector(".user-list");
+
+  if (nextUserList) {
+    nextUserList.scrollTop = savedUserListScrollTop;
+  }
+
+  window.scrollTo(0, savedPageScrollY);
 
   checkPcVoiceGuide();
 }
