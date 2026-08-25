@@ -319,8 +319,21 @@ function handleBraceletRegister(userId) {
     return;
   }
 
+  // 이번에 별도로 기록한 지급 포인트
+  const grantedPoints = user.lastGrantedPoints || 0;
+
+  // 자동 계산
+  const cardTime = grantedPoints * 900;
+  const chargeAmount = grantedPoints;
+  const minutes = grantedPoints * 15;
+
   alert(
-    `${user.teamName}팀\n팔찌번호: ${braceletNumber}\n\n팔찌등록 버튼이 정상 작동합니다.`
+    `${user.teamName}팀\n` +
+    `팔찌번호: ${braceletNumber}\n` +
+    `지급 포인트: ${grantedPoints}\n` +
+    `Card Time: ${cardTime}초 (${minutes}분)\n` +
+    `Charge Amount: ${chargeAmount}\n\n` +
+    `팔찌 등록값이 정상 계산되었습니다.`
   );
 }
 
@@ -522,8 +535,14 @@ function handleAdminLogin() {
 function givePoints(userId, amount) {
   const user = getUserById(userId);
   if (!user) return;
+
+  // 기존 대기시스템 포인트에 추가
   user.points = (user.points || 0) + amount;
   user.totalPointsReceived = (user.totalPointsReceived || 0) + amount;
+
+  // 이번에 지급한 포인트를 팔찌 등록용으로 별도 기록
+  user.lastGrantedPoints = amount;
+
   saveData();
   render();
 }
