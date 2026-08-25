@@ -353,16 +353,23 @@ async function handleBraceletRegister(userId) {
     const result = await response.json();
 
     if (!response.ok || !result.ok) {
-      console.error("팔찌 등록 실패:", result);
+  console.error("팔찌 등록 실패:", result);
 
-      alert(
-        result.message ||
-        result.error ||
-        "팔찌 등록에 실패했습니다."
-      );
+  const manufacturerDetail = result.manufacturer
+    ? JSON.stringify(result.manufacturer.data, null, 2)
+    : "";
 
-      return;
-    }
+  alert(
+    (result.message ||
+      result.error ||
+      "팔찌 등록에 실패했습니다.") +
+    (manufacturerDetail
+      ? `\n\n제조사 응답:\n${manufacturerDetail}`
+      : "")
+  );
+
+  return;
+}
 
     const cardTimePerPoint = 900;
     const totalSeconds = grantedPoints * cardTimePerPoint;
