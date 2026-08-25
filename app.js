@@ -329,11 +329,14 @@ async function handleBraceletRegister(userId) {
   }
 
   const payload = {
-    memberName: user.teamName,
-    phone: user.phone,
-    icCardNumber: braceletNumber,
-    cardCount: grantedPoints
-  };
+  memberName: user.teamName,
+  phone: user.phone,
+  icCardNumber: braceletNumber,
+  cardCount: grantedPoints,
+
+  // 기존에 발급된 제조사 회원이라면 memberId도 전송
+  memberId: user.manufacturerMemberId || ""
+};
 
   try {
     const response = await fetch(
@@ -373,7 +376,14 @@ async function handleBraceletRegister(userId) {
       `총 이용시간: ${totalSeconds}초 (${minutes}분)\n` +
       `Charge Amount: ${grantedPoints}`
 
-    // 팔찌등록이 완료됐으므로 별도 지급 포인트 초기화
+    // 최초 등록 때 받은 제조사 회원 ID와 팔찌번호 저장
+if (result.memberId) {
+  user.manufacturerMemberId = result.memberId;
+}
+
+user.registeredBraceletNumber = braceletNumber;
+
+// 팔찌등록이 완료됐으므로 별도 지급 포인트 초기화
 user.lastGrantedPoints = 0;
 
 // 팔찌 입력칸 초기화
