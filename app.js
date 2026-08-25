@@ -368,8 +368,13 @@ async function handleBraceletRegister(userId) {
     const totalSeconds = grantedPoints * cardTimePerPoint;
     const minutes = grantedPoints * 15;
 
+    const completionTitle =
+      result.registrationMode === "additional"
+        ? `${user.teamName}팀 기존 팔찌에 포인트가 추가되었습니다.`
+        : `${user.teamName}팀 신규 팔찌 등록이 완료되었습니다.`;
+
     alert(
-      `${user.teamName}팀 팔찌 등록이 완료되었습니다.\n\n` +
+      `${completionTitle}\n\n` +
       `팔찌번호: ${braceletNumber}\n` +
       `지급 포인트: ${grantedPoints}\n` +
       `Card Time: ${cardTimePerPoint}초 (1포인트당 15분)\n` +
