@@ -329,14 +329,14 @@ async function handleBraceletRegister(userId) {
   }
 
   const payload = {
-  memberName: user.teamName,
-  phone: user.phone,
-  icCardNumber: braceletNumber,
-  cardCount: grantedPoints,
+    memberName: user.teamName,
+    phone: user.phone,
+    icCardNumber: braceletNumber,
+    cardCount: grantedPoints,
 
-  // 기존에 발급된 제조사 회원이라면 memberId도 전송
-  memberId: user.manufacturerMemberId || ""
-};
+    // 기존 회원이면 저장된 제조사 회원 ID 전송
+    memberId: user.manufacturerMemberId || ""
+  };
 
   try {
     const response = await fetch(
@@ -373,6 +373,21 @@ async function handleBraceletRegister(userId) {
         ? `${user.teamName}팀 기존 팔찌에 포인트가 추가되었습니다.`
         : `${user.teamName}팀 신규 팔찌 등록이 완료되었습니다.`;
 
+    // 제조사 회원 ID와 팔찌번호 저장
+    if (result.memberId) {
+      user.manufacturerMemberId = result.memberId;
+    }
+
+    user.registeredBraceletNumber = braceletNumber;
+
+    // 팔찌 등록이 완료됐으므로 별도 지급 포인트 초기화
+    user.lastGrantedPoints = 0;
+
+    // 팔찌 입력칸 초기화
+    state.braceletInputs[userId] = "";
+
+    await saveData();
+
     alert(
       `${completionTitle}\n\n` +
       `팔찌번호: ${braceletNumber}\n` +
@@ -380,22 +395,18 @@ async function handleBraceletRegister(userId) {
       `Card Time: ${cardTimePerPoint}초 (1포인트당 15분)\n` +
       `총 이용시간: ${totalSeconds}초 (${minutes}분)\n` +
       `Charge Amount: ${grantedPoints}`
+    );
 
-    // 최초 등록 때 받은 제조사 회원 ID와 팔찌번호 저장
-if (result.memberId) {
-  user.manufacturerMemberId = result.memberId;
+    render();
+  } catch (error) {
+    console.error("로컬 서버 연결 실패:", error);
+
+    alert(
+      "팔찌 등록 서버에 연결할 수 없습니다.\n" +
+      "관리자 PC에서 run 파일이 실행 중인지 확인해주세요."
+    );
+  }
 }
-
-user.registeredBraceletNumber = braceletNumber;
-
-// 팔찌등록이 완료됐으므로 별도 지급 포인트 초기화
-user.lastGrantedPoints = 0;
-
-// 팔찌 입력칸 초기화
-state.braceletInputs[userId] = "";
-
-await saveData();
-render();
 
 function showAllUsersList() {
   state.searchKeyword = "";
