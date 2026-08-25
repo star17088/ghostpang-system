@@ -353,16 +353,17 @@ async function handleBraceletRegister(userId) {
       return;
     }
 
-    const cardTime = grantedPoints * 900;
+    const cardTimePerPoint = 900;
+    const totalSeconds = grantedPoints * cardTimePerPoint;
     const minutes = grantedPoints * 15;
 
     alert(
       `${user.teamName}팀 팔찌 등록이 완료되었습니다.\n\n` +
       `팔찌번호: ${braceletNumber}\n` +
       `지급 포인트: ${grantedPoints}\n` +
-      `Card Time: ${cardTime}초 (${minutes}분)\n` +
+      `Card Time: ${cardTimePerPoint}초 (1포인트당 15분)\n` +
+      `총 이용시간: ${totalSeconds}초 (${minutes}분)\n` +
       `Charge Amount: ${grantedPoints}`
-    );
 
     state.braceletInputs[userId] = "";
     render();
