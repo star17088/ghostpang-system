@@ -356,7 +356,7 @@ async function handleBraceletRegister(userId) {
   console.error("팔찌 등록 실패:", result);
 
   const manufacturerDetail = result.manufacturer
-    ? JSON.stringify(result.manufacturer.data, null, 2)
+    ? JSON.stringify(result.manufacturer, null, 2)
     : "";
 
   alert(
