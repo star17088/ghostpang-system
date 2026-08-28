@@ -352,8 +352,45 @@ async function handleBraceletRegister(userId) {
 
     const result = await response.json();
 
-    if (!response.ok || !result.ok) {
-  console.error("팔찌 등록 실패:", result);
+       if (!response.ok || !result.ok) {
+      const memberNotFound =
+        result.stage === "member-card" &&
+        Number(result.manufacturer?.data?.code) === 500 &&
+        result.manufacturer?.data?.msg?.trim() === "找不到会员";
+
+      if (memberNotFound && user.manufacturerMemberId) {
+        const resetConnection = confirm(
+          "제조사에서 기존 회원을 찾을 수 없습니다.\n\n" +
+          "제조사 사이트에서 이 회원을 삭제했다면 확인을 눌러주세요.\n" +
+          "예전 회원 연결만 초기화합니다.\n" +
+          "팀 정보와 포인트는 유지됩니다."
+        );
+
+        if (resetConnection) {
+          const previousMemberId = user.manufacturerMemberId;
+          user.manufacturerMemberId = "";
+
+          try {
+            await setDoc(DATA_DOC, state.data);
+          } catch (error) {
+            user.manufacturerMemberId = previousMemberId;
+            console.error("회원 연결 초기화 저장 실패:", error);
+            alert("초기화 저장에 실패했습니다. 다시 시도해주세요.");
+            return;
+          }
+
+          alert(
+            "예전 회원 연결을 초기화했습니다.\n" +
+            "포인트를 다시 지급하지 말고,\n" +
+            "현재 팔찌번호로 팔찌등록을 한 번 눌러주세요."
+          );
+          render();
+        }
+
+        return;
+      }
+
+      console.error("팔찌 등록 실패:", result);
 
   const manufacturerDetail = result.manufacturer
     ? JSON.stringify(result.manufacturer, null, 2)
