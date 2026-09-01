@@ -351,12 +351,36 @@ async function handleBraceletRegister(userId) {
     );
 
     const result = await response.json();
+    // 회원 생성 후 팔찌 발급만 실패한 경우에도
+// 생성된 제조사 회원 ID는 반드시 저장
+if (
+  result.stage === "member-card" &&
+  result.memberId &&
+  !user.manufacturerMemberId
+) {
+  user.manufacturerMemberId = String(result.memberId);
+
+  try {
+    await saveData();
+    console.log(
+      "제조사 회원 ID 우선 저장:",
+      user.manufacturerMemberId
+    );
+  } catch (saveError) {
+    user.manufacturerMemberId = "";
+    console.error(
+      "제조사 회원 ID 저장 실패:",
+      saveError
+    );
+  }
+}
 
        if (!response.ok || !result.ok) {
       const memberNotFound =
         result.stage === "member-card" &&
         Number(result.manufacturer?.data?.code) === 500 &&
-        result.manufacturer?.data?.msg?.trim() === "找不到会员";
+        result.manufacturer?.data?.msg?.trim() ===
+  "제조사에서 기존 회원을 찾을 수 없습니다.";
 
       if (memberNotFound && user.manufacturerMemberId) {
         const resetConnection = confirm(
