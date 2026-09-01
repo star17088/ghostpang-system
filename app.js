@@ -338,11 +338,6 @@ async function handleBraceletRegister(userId) {
     memberId: user.manufacturerMemberId || ""
   };
 
-  alert(
-  "전송할 제조사 회원 ID:\n" +
-  (payload.memberId || "저장된 ID 없음")
-);
-
   try {
     const response = await fetch(
       "http://127.0.0.1:8787/api/test-register",
@@ -442,9 +437,9 @@ if (
     const minutes = grantedPoints * 15;
 
     const completionTitle =
-      result.registrationMode === "additional"
-        ? `${user.teamName}팀 기존 팔찌에 포인트가 추가되었습니다.`
-        : `${user.teamName}팀 신규 팔찌 등록이 완료되었습니다.`;
+  result.registrationMode === "additional"
+    ? `${user.teamName}팀 기존 회원에게 팔찌 정보와 포인트가 등록되었습니다.`
+    : `${user.teamName}팀 신규 회원 및 팔찌 등록이 완료되었습니다.`;
 
     // 제조사 회원 ID와 팔찌번호 저장
     if (result.memberId) {
