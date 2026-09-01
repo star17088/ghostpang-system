@@ -338,6 +338,11 @@ async function handleBraceletRegister(userId) {
     memberId: user.manufacturerMemberId || ""
   };
 
+  alert(
+  "전송할 제조사 회원 ID:\n" +
+  (payload.memberId || "저장된 ID 없음")
+);
+
   try {
     const response = await fetch(
       "http://127.0.0.1:8787/api/test-register",
