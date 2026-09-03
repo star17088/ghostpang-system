@@ -630,13 +630,22 @@ function adminCreateWalkIn(queueKey) {
   const teamName = prompt("팀명을 입력해주세요.");
   if (!teamName) return;
 
+  const phone = onlyNumber(
+    prompt("휴대폰번호를 입력해주세요.") || ""
+  );
+
+  if (phone.length < 10 || phone.length > 11) {
+    alert("휴대폰번호를 정확하게 입력해주세요.");
+    return;
+  }
+
   const people = prompt("인원수를 입력해주세요.") || "";
   const tableNo = prompt("테이블 번호를 입력해주세요.") || "";
 
   const user = {
     id: makeId(),
     teamName: teamName.trim(),
-    phone: "",
+    phone: phone,
     people: onlyNumber(people),
     tableNo: tableNo.trim(),
     points: 0,
