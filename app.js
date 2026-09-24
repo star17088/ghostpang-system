@@ -627,41 +627,114 @@ function adminAddQueue(queueKey, userId) {
 }
 
 function adminCreateWalkIn(queueKey) {
-  const teamName = prompt("팀명을 입력해주세요.");
-  if (!teamName) return;
+  const enteredName = prompt("팀명을 입력해주세요.");
+  if (enteredName === null) return;
 
-  const phone = onlyNumber(
-    prompt("휴대폰번호를 입력해주세요.") || ""
-  );
+  const teamName = enteredName.trim();
+  if (!teamName) {
+    alert("팀명을 입력해주세요.");
+    return;
+  }
 
+  const enteredPhone = prompt("휴대폰번호를 입력해주세요.");
+  if (enteredPhone === null) return;
+
+  const phone = onlyNumber(enteredPhone);
   if (phone.length < 10 || phone.length > 11) {
     alert("휴대폰번호를 정확하게 입력해주세요.");
     return;
   }
 
-  const people = prompt("인원수를 입력해주세요.") || "";
-  const tableNo = prompt("테이블 번호를 입력해주세요.") || "";
+  // 제조사 회원은 전화번호가 중복될 수 있으므로,
+  // 같은 번호가 다른 팀명으로 저장되어 있으면 먼저 확인한다.
+  const phoneUsers = state.data.users.filter(
+    (u) => onlyNumber(u.phone) === phone
+  );
 
-  const user = {
-    id: makeId(),
-    teamName: teamName.trim(),
-    phone: phone,
-    people: onlyNumber(people),
-    tableNo: tableNo.trim(),
-    points: 0,
-    totalPointsReceived: 0,
-    boardgamePoint: 0,
-    boardgameJoinedAt: "",
-    createdAt: Date.now(),
-  };
+  if (
+    phoneUsers.some(
+      (u) => String(u.teamName || "").trim() !== teamName
+    )
+  ) {
+    alert(
+      "이 전화번호가 다른 팀명으로 이미 저장되어 있습니다.\n" +
+      "고객 검색에서 기존 정보를 확인해주세요."
+    );
+    return;
+  }
 
-  state.data.users.push(user);
+  const linkedUsers = phoneUsers.filter(
+    (u) => String(u.manufacturerMemberId || "").trim()
+  );
+
+  if (linkedUsers.length > 1 || (phoneUsers.length > 1 && linkedUsers.length === 0)) {
+    alert(
+      "같은 팀명과 전화번호의 고객 카드가 여러 개 있습니다.\n" +
+      "자동으로 선택하지 않고 기존 고객 정보를 먼저 확인해주세요."
+    );
+    return;
+  }
+
+  const user = linkedUsers[0] || phoneUsers[0];
+
+  // 이미 만들어진 중복 카드에 이번 포인트가 지급됐다면
+  // 다른 카드로 접수하면서 포인트를 빠뜨리지 않도록 중단한다.
+  if (
+    user &&
+    phoneUsers.some(
+      (u) => u.id !== user.id && Number(u.lastGrantedPoints || 0) > 0
+    )
+  ) {
+    alert(
+      "다른 중복 고객 카드에 이번 지급 포인트가 있습니다.\n" +
+      "고객 검색에서 포인트가 들어간 카드를 먼저 확인해주세요."
+    );
+    return;
+  }
+
+  if (user && isAlreadyInQueue(queueKey, user.id)) {
+    alert("이미 해당 대기열에 등록되어 있습니다.");
+    return;
+  }
+
+  const enteredPeople = prompt(
+    "인원수를 입력해주세요.",
+    user?.people || ""
+  );
+  if (enteredPeople === null) return;
+
+  const enteredTable = prompt(
+    "테이블 번호를 입력해주세요.",
+    user?.tableNo || ""
+  );
+  if (enteredTable === null) return;
+
+  let targetUser = user;
+
+  if (!targetUser) {
+    targetUser = {
+      id: makeId(),
+      teamName,
+      phone,
+      people: onlyNumber(enteredPeople),
+      tableNo: enteredTable.trim(),
+      points: 0,
+      totalPointsReceived: 0,
+      boardgamePoint: 0,
+      boardgameJoinedAt: "",
+      createdAt: Date.now(),
+    };
+    state.data.users.push(targetUser);
+  } else {
+    targetUser.people = onlyNumber(enteredPeople);
+    targetUser.tableNo = enteredTable.trim();
+  }
 
   const queue = state.data.queues[queueKey];
   const nowMinute = getNowMinute();
 
   queue.push({
-    userId: user.id,
+    userId: targetUser.id,
     startAt: nowMinute + (queue.length + 1) * 16,
   });
 
